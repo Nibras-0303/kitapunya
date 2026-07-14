@@ -1,12 +1,18 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { createServer as createViteServer } from "vite";
 import { apiRouter } from "./src/api/routes.js";
 import { dbService } from "./src/services/db.js";
 
 // Load environment variables
 dotenv.config();
+
+// Log environment status for debugging
+console.log("=== ENV CHECK ===");
+console.log("DATABASE_URL:", process.env.DATABASE_URL ? "DETECTED" : "NOT FOUND");
+console.log("SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "DETECTED" : "NOT FOUND");
+console.log("VITE_SUPABASE_URL:", process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL ? "DETECTED" : "NOT FOUND");
+console.log("=================");
 
 const app = express();
 
@@ -39,8 +45,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Response-formatting middleware for all /api endpoints
+// Response-formatting middleware for all /api endpoints to enforce JSON and requested format
 app.use("/api", (req, res, next) => {
+  // Set JSON Content-Type always
+  res.setHeader("Content-Type", "application/json");
+
   const originalJson = res.json;
   res.json = function (body) {
     if (body && typeof body === "object") {
@@ -49,16 +58,28 @@ app.use("/api", (req, res, next) => {
         if (body.success === undefined) {
           body.success = false;
         }
-        if (body.error === undefined && body.message) {
-          body.error = body.message;
-        }
+        // Enforce success: false and message: "..."
+        const errorMsg = body.error || body.message || "Ralat pelayan dalaman berlaku.";
+        body.error = errorMsg;
+        body.message = errorMsg;
+        // Clean up standard payload properties if they leak
+        delete body.data;
       } else {
         if (body.success === undefined) {
           body.success = true;
         }
+        // Enforce success: true and data: ...
         if (body.data === undefined) {
-          body.data = { ...body };
-          delete body.data.success;
+          // Clone the body to set it as data
+          const cloned = { ...body };
+          delete cloned.success;
+          body.data = cloned;
+          // Remove top-level non-conforming fields to avoid cluttering response
+          Object.keys(cloned).forEach(key => {
+            if (key !== "data" && key !== "success") {
+              delete body[key];
+            }
+          });
         }
       }
     }
@@ -101,6 +122,7 @@ async function startServer() {
   // Serve static assets or configure Vite HMR
   if (process.env.NODE_ENV !== "production") {
     console.log("Starting server in DEVELOPMENT mode with Vite middleware...");
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

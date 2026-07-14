@@ -25,7 +25,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || "Ralat komunikasi pelayan.");
+    throw new Error(data.message || data.error || "Ralat komunikasi pelayan.");
+  }
+
+  // If the server wrapped the response in { success: true, data: ... }, unwrap it for the client.
+  if (data && typeof data === "object" && "success" in data && "data" in data) {
+    if (data.data && typeof data.data === "object" && !Array.isArray(data.data)) {
+      return { success: data.success, ...data.data } as T;
+    }
+    return data.data as T;
   }
 
   return data as T;
