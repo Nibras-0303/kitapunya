@@ -478,20 +478,44 @@ function getDb() {
           connectionString: process.env.DATABASE_URL,
           ssl: { rejectUnauthorized: false },
         });
-        dbClient = drizzle(pgPool, { schema });
-        console.log("PostgreSQL Database connected successfully via Drizzle!");
         
-        // Auto initialize tables in the background lazily
+        // Prevent unhandled exception crashes on idle database clients
+        pgPool.on("error", (err: any) => {
+          console.error("Unexpected error on idle PostgreSQL client:", err);
+        });
+
+        dbClient = drizzle(pgPool, { schema });
+        console.log("PostgreSQL Database client created successfully.");
+        
+        // Auto initialize tables in the background lazily with a connection test
         if (!schemaInitialized && !dbInitPromise) {
           dbInitPromise = (async () => {
-            console.log("Auto-initializing tables...");
-            for (const statement of DDL_STATEMENTS) {
-              await dbClient.execute(sql.raw(statement)).catch((err: any) => {
-                console.error("DDL statement error:", err.message || err);
-              });
+            try {
+              console.log("[db] Testing database connection...");
+              // Test the connection with a fast SELECT 1
+              await dbClient.execute(sql`SELECT 1`);
+              console.log("[db] Database connection test succeeded. Auto-initializing tables...");
+              
+              for (const statement of DDL_STATEMENTS) {
+                try {
+                  await dbClient.execute(sql.raw(statement));
+                } catch (ddlErr: any) {
+                  console.warn(`[db] DDL statement warning (continuing): ${statement.substring(0, 50)}... Error:`, ddlErr.message || ddlErr);
+                }
+              }
+              
+              try {
+                await seedDb(dbClient);
+              } catch (seedErr: any) {
+                console.error("[db] Database seed failed:", seedErr.message || seedErr);
+              }
+              
+              schemaInitialized = true;
+              console.log("[db] Database initialization completed successfully!");
+            } catch (err: any) {
+              console.error("[db] Database connection test failed. Falling back to Memory mode.", err.message || err);
+              dbClient = null; // Set to null so that we bypass DB completely and use memory mode
             }
-            await seedDb(dbClient).catch((err) => console.error("Database seed error:", err));
-            schemaInitialized = true;
           })();
         }
       } catch (err) {
@@ -523,7 +547,15 @@ export const dbService = {
     const db = getDb();
     if (!db) return;
     if (dbInitPromise) {
-      await dbInitPromise;
+      // Add a 1000ms timeout so we don't freeze the request if the database is initializing slowly
+      const timeoutPromise = new Promise<void>((_, reject) => {
+        setTimeout(() => reject(new Error("Timeout waiting for database initialization (1000ms exceeded)")), 1000);
+      });
+      try {
+        await Promise.race([dbInitPromise, timeoutPromise]);
+      } catch (err: any) {
+        console.warn("[db] Proceeding in background: " + (err.message || err));
+      }
     }
   },
 

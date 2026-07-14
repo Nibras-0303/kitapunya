@@ -17,7 +17,7 @@ async function requireAuth(req: Request, res: Response, next: any) {
     }
 
     if (!userId) {
-      return res.status(41).json({ error: "Unauthorized. Sila log masuk terlebih dahulu." });
+      return res.status(401).json({ error: "Unauthorized. Sila log masuk terlebih dahulu." });
     }
 
     const user = await dbService.getUser(userId);
@@ -861,5 +861,29 @@ apiRouter.post("/scan-receipt", requireAuth, async (req: Request, res: Response)
   } catch (err: any) {
     console.error("OCR Scan API Error:", err);
     res.status(500).json({ error: "Gagal menganalisis resit: " + (err.message || err) });
+  }
+});
+
+// --- DIAGNOSTICS ENDPOINT ---
+apiRouter.get("/diagnostics", (req: Request, res: Response) => {
+  try {
+    const databaseUrl = process.env.DATABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+
+    res.json({
+      DATABASE_URL: databaseUrl ? `Terbaca (panjang: ${databaseUrl.length}, bermula dengan: ${databaseUrl.substring(0, 10)}...)` : "Tidak ditemui",
+      VITE_SUPABASE_URL_DETECTED: process.env.VITE_SUPABASE_URL ? "YA" : "TIDAK",
+      SUPABASE_URL: supabaseUrl ? `Terbaca (panjang: ${supabaseUrl.length}, bermula dengan: ${supabaseUrl.substring(0, 15)}...)` : "Tidak ditemui",
+      SUPABASE_KEY: supabaseKey ? `Terbaca (panjang: ${supabaseKey.length})` : "Tidak ditemui",
+      SUPABASE_SERVICE_ROLE_KEY_DETECTED: serviceRoleKey ? `YA (panjang: ${serviceRoleKey.length})` : "TIDAK",
+      GEMINI_API_KEY: geminiKey ? `Terbaca (panjang: ${geminiKey.length})` : "Tidak ditemui",
+      VERCEL: process.env.VERCEL || "bukan 1",
+      NODE_ENV: process.env.NODE_ENV || "development"
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Gagal menjalankan diagnostics: " + err.message });
   }
 });

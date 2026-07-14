@@ -5,8 +5,10 @@ import { dbService } from "./db.js";
 let supabaseInstance: any = null;
 
 export function getSupabase() {
-  const url = process.env.SUPABASE_URL || (typeof window !== 'undefined' ? (window as any).env?.SUPABASE_URL : null);
-  const key = process.env.SUPABASE_ANON_KEY || (typeof window !== 'undefined' ? (window as any).env?.SUPABASE_ANON_KEY : null);
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || (typeof window !== 'undefined' ? (window as any).env?.SUPABASE_URL : null);
+  const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || (typeof window !== 'undefined' ? (window as any).env?.SUPABASE_ANON_KEY : null);
+
+  console.log(`[getSupabase] URL exists: ${url ? "YES" : "NO"} (${url ? url.substring(0, 15) : ""}), Key exists: ${key ? "YES" : "NO"}`);
 
   if (url && key) {
     if (!supabaseInstance) {

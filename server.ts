@@ -24,6 +24,49 @@ app.use(async (req, res, next) => {
   next();
 });
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[REQUEST] ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  if (Object.keys(req.query).length > 0) {
+    console.log(`[QUERY]`, JSON.stringify(req.query));
+  }
+  if (req.body && Object.keys(req.body).length > 0) {
+    const loggedBody = { ...req.body };
+    if (loggedBody.password) loggedBody.password = "********";
+    if (loggedBody.base64Image) loggedBody.base64Image = `base64_data_length_${loggedBody.base64Image.length}`;
+    console.log(`[BODY]`, JSON.stringify(loggedBody));
+  }
+  next();
+});
+
+// Response-formatting middleware for all /api endpoints
+app.use("/api", (req, res, next) => {
+  const originalJson = res.json;
+  res.json = function (body) {
+    if (body && typeof body === "object") {
+      const isError = res.statusCode >= 400 || body.error !== undefined || body.success === false;
+      if (isError) {
+        if (body.success === undefined) {
+          body.success = false;
+        }
+        if (body.error === undefined && body.message) {
+          body.error = body.message;
+        }
+      } else {
+        if (body.success === undefined) {
+          body.success = true;
+        }
+        if (body.data === undefined) {
+          body.data = { ...body };
+          delete body.data.success;
+        }
+      }
+    }
+    return originalJson.call(this, body);
+  };
+  next();
+});
+
 // API Health Check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", mode: process.env.DATABASE_URL ? "production-db" : "demo-mode" });
@@ -31,6 +74,24 @@ app.get("/api/health", (req, res) => {
 
 // Mount the Express API Router
 app.use("/api", apiRouter);
+
+// Catch-all 404 for any unmatched /api routes
+app.use("/api/*", (req, res) => {
+  console.log(`[404] API Route Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    success: false,
+    error: `Laluan ${req.method} ${req.originalUrl} tidak ditemui.`
+  });
+});
+
+// Global error handler to catch any unhandled router exceptions and guarantee JSON response
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error("[GLOBAL ERROR]", err);
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || "Ralat pelayan dalaman berlaku."
+  });
+});
 
 export default app;
 
