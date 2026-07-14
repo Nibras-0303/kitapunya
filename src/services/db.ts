@@ -353,6 +353,7 @@ let dbClient: any = null;
 let pgPool: any = null;
 let schemaInitialized = false;
 let dbInitPromise: Promise<void> | null = null;
+let useMemoryFallback = false;
 
 export async function seedDb(db: any) {
   try {
@@ -471,6 +472,9 @@ export async function seedDb(db: any) {
 }
 
 function getDb() {
+  if (useMemoryFallback) {
+    return null;
+  }
   if (process.env.DATABASE_URL) {
     if (!dbClient) {
       try {
@@ -514,12 +518,14 @@ function getDb() {
               console.log("[db] Database initialization completed successfully!");
             } catch (err: any) {
               console.error("[db] Database connection test failed. Falling back to Memory mode.", err.message || err);
+              useMemoryFallback = true;
               dbClient = null; // Set to null so that we bypass DB completely and use memory mode
             }
           })();
         }
       } catch (err) {
         console.error("Failed to connect to PostgreSQL database, falling back to Memory mode:", err);
+        useMemoryFallback = true;
         dbClient = null;
       }
     }

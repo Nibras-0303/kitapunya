@@ -121,7 +121,7 @@ export default function App() {
         api.getBudgets(),
         api.getSavingsGoals(),
         api.getInvestments(),
-        api.getAdminLogs()
+        session.role === "admin" ? api.getAdminLogs() : Promise.resolve([])
       ]);
 
       setAccounts(accs);

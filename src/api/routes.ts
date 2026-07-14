@@ -1,41 +1,59 @@
 import { Router, Request, Response } from "express";
 import { dbService } from "../services/db.js";
-import { authService } from "../services/auth.js";
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const apiRouter = Router();
 
-// Middleware to mock/retrieve current user session
-async function requireAuth(req: Request, res: Response, next: any) {
+// Middleware to mock/retrieve current user profile
+async function requireProfile(req: Request, res: Response, next: any) {
   try {
-    const authHeader = req.headers.authorization;
-    let userId = req.headers["x-user-id"] as string;
+    const profileId = (req.headers["x-profile-id"] || req.headers["x-user-id"] || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.substring(7) : "")) as string;
 
-    if (!userId && authHeader && authHeader.startsWith("Bearer ")) {
-      // Decode simulated token or read actual session
-      userId = authHeader.substring(7);
+    if (!profileId) {
+      return res.status(401).json({ error: "profile_id diperlukan pada setiap request." });
     }
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized. Sila log masuk terlebih dahulu." });
+    const validProfiles = [
+      "11111111-1111-1111-1111-111111111111",
+      "22222222-2222-2222-2222-222222222222",
+      "33333333-3333-3333-3333-333333333333"
+    ];
+
+    if (!validProfiles.includes(profileId)) {
+      return res.status(401).json({ error: "Profil tidak ditemui atau tidak sah." });
     }
 
-    const user = await dbService.getUser(userId);
+    let user = await dbService.getUser(profileId);
     if (!user) {
-      return res.status(401).json({ error: "User tidak ditemui. Sila daftar semula." });
+      const names: Record<string, string> = {
+        "11111111-1111-1111-1111-111111111111": "Nibras",
+        "22222222-2222-2222-2222-222222222222": "Zenita",
+        "33333333-3333-3333-3333-333333333333": "Uang Bersama"
+      };
+      const emails: Record<string, string> = {
+        "11111111-1111-1111-1111-111111111111": "nibras@kitapunya.id",
+        "22222222-2222-2222-2222-222222222222": "zenita@kitapunya.id",
+        "33333333-3333-3333-3333-333333333333": "bersama@kitapunya.id"
+      };
+      user = await dbService.createUser({
+        id: profileId,
+        email: emails[profileId],
+        fullName: names[profileId],
+        role: profileId === "33333333-3333-3333-3333-333333333333" ? "admin" : "user"
+      });
     }
 
     req.user = user; // attach user to request
     next();
   } catch (err) {
-    console.error("Auth middleware error:", err);
-    res.status(500).json({ error: "Ralat sistem pada pengesahan pengguna." });
+    console.error("Profile middleware error:", err);
+    res.status(500).json({ error: "Ralat sistem pada pengesahan profil." });
   }
 }
 
 // Middleware to verify Admin role
 async function requireAdmin(req: Request, res: Response, next: any) {
-  await requireAuth(req, res, () => {
+  await requireProfile(req, res, () => {
     if (req.user?.role !== "admin") {
       return res.status(403).json({ error: "Akses dinafikan. Hanya Admin dibenarkan." });
     }
@@ -61,11 +79,46 @@ declare global {
 // --- AUTH ENDPOINTS ---
 apiRouter.post("/auth/login", async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email dan kata laluan diperlukan." });
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Sila pilih profil." });
     }
-    const session = await authService.login(email, password);
+
+    const profileIdMap: Record<string, string> = {
+      "nibras@kitapunya.id": "11111111-1111-1111-1111-111111111111",
+      "zenita@kitapunya.id": "22222222-2222-2222-2222-222222222222",
+      "bersama@kitapunya.id": "33333333-3333-3333-3333-333333333333"
+    };
+
+    const profileNames: Record<string, string> = {
+      "nibras@kitapunya.id": "Nibras",
+      "zenita@kitapunya.id": "Zenita",
+      "bersama@kitapunya.id": "Uang Bersama"
+    };
+
+    const profileId = profileIdMap[email];
+    if (!profileId) {
+      return res.status(400).json({ error: "Profil tidak sah." });
+    }
+
+    let user = await dbService.getUser(profileId);
+    if (!user) {
+      user = await dbService.createUser({
+        id: profileId,
+        email,
+        fullName: profileNames[email],
+        role: profileId === "33333333-3333-3333-3333-333333333333" ? "admin" : "user"
+      });
+    }
+
+    const session = {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      token: user.id
+    };
+
     res.json({ session });
   } catch (err: any) {
     console.error("Login API error:", err);
@@ -74,32 +127,15 @@ apiRouter.post("/auth/login", async (req: Request, res: Response) => {
 });
 
 apiRouter.post("/auth/signup", async (req: Request, res: Response) => {
-  try {
-    const { email, password, fullName } = req.body;
-    if (!email || !password || !fullName) {
-      return res.status(400).json({ error: "Email, kata laluan dan nama penuh diperlukan." });
-    }
-    const session = await authService.signUp(email, password, fullName);
-    res.json({ session });
-  } catch (err: any) {
-    console.error("Signup API error:", err);
-    res.status(400).json({ error: err.message || "Pendaftaran gagal." });
-  }
+  res.status(400).json({ error: "Pendaftaran tidak dibenarkan. Sila gunakan profil tetap." });
 });
 
 apiRouter.post("/auth/logout", async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.body;
-    await authService.logout(userId || null);
-    res.json({ success: true });
-  } catch (err: any) {
-    console.error("Logout API error:", err);
-    res.status(500).json({ error: "Ralat ketika log keluar." });
-  }
+  res.json({ success: true });
 });
 
 // --- ACCOUNT ENDPOINTS ---
-apiRouter.get("/accounts", requireAuth, async (req: Request, res: Response) => {
+apiRouter.get("/accounts", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const accounts = await dbService.getAccounts(userId);
@@ -109,7 +145,7 @@ apiRouter.get("/accounts", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-apiRouter.post("/accounts", requireAuth, async (req: Request, res: Response) => {
+apiRouter.post("/accounts", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { name, type, balance, color } = req.body;
@@ -132,7 +168,7 @@ apiRouter.post("/accounts", requireAuth, async (req: Request, res: Response) => 
   }
 });
 
-apiRouter.put("/accounts/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.put("/accounts/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -156,7 +192,7 @@ apiRouter.put("/accounts/:id", requireAuth, async (req: Request, res: Response) 
   }
 });
 
-apiRouter.delete("/accounts/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.delete("/accounts/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -174,7 +210,7 @@ apiRouter.delete("/accounts/:id", requireAuth, async (req: Request, res: Respons
 });
 
 // --- CATEGORIES ENDPOINTS ---
-apiRouter.get("/categories", requireAuth, async (req: Request, res: Response) => {
+apiRouter.get("/categories", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const categories = await dbService.getCategories(userId);
@@ -184,7 +220,7 @@ apiRouter.get("/categories", requireAuth, async (req: Request, res: Response) =>
   }
 });
 
-apiRouter.post("/categories", requireAuth, async (req: Request, res: Response) => {
+apiRouter.post("/categories", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { name, type, icon, color } = req.body;
@@ -207,7 +243,7 @@ apiRouter.post("/categories", requireAuth, async (req: Request, res: Response) =
   }
 });
 
-apiRouter.put("/categories/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.put("/categories/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -225,7 +261,7 @@ apiRouter.put("/categories/:id", requireAuth, async (req: Request, res: Response
   }
 });
 
-apiRouter.delete("/categories/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.delete("/categories/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -243,7 +279,7 @@ apiRouter.delete("/categories/:id", requireAuth, async (req: Request, res: Respo
 });
 
 // --- TRANSACTIONS ENDPOINTS ---
-apiRouter.get("/transactions", requireAuth, async (req: Request, res: Response) => {
+apiRouter.get("/transactions", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { accountId, categoryId, startDate, endDate, search } = req.query;
@@ -262,7 +298,7 @@ apiRouter.get("/transactions", requireAuth, async (req: Request, res: Response) 
   }
 });
 
-apiRouter.post("/transactions", requireAuth, async (req: Request, res: Response) => {
+apiRouter.post("/transactions", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { accountId, toAccountId, categoryId, amount, type, description, date, receiptImageUrl } = req.body;
@@ -291,7 +327,7 @@ apiRouter.post("/transactions", requireAuth, async (req: Request, res: Response)
   }
 });
 
-apiRouter.delete("/transactions/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.delete("/transactions/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -309,7 +345,7 @@ apiRouter.delete("/transactions/:id", requireAuth, async (req: Request, res: Res
 });
 
 // --- BUDGETS ENDPOINTS ---
-apiRouter.get("/budgets", requireAuth, async (req: Request, res: Response) => {
+apiRouter.get("/budgets", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const month = (req.query.month as string) || new Date().toISOString().substring(0, 7);
@@ -321,7 +357,7 @@ apiRouter.get("/budgets", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-apiRouter.post("/budgets", requireAuth, async (req: Request, res: Response) => {
+apiRouter.post("/budgets", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { categoryId, amount, month } = req.body;
@@ -344,7 +380,7 @@ apiRouter.post("/budgets", requireAuth, async (req: Request, res: Response) => {
 });
 
 // --- SAVINGS GOALS (TARGET TABUNGAN) ---
-apiRouter.get("/savings-goals", requireAuth, async (req: Request, res: Response) => {
+apiRouter.get("/savings-goals", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const goals = await dbService.getSavingsGoals(userId);
@@ -354,7 +390,7 @@ apiRouter.get("/savings-goals", requireAuth, async (req: Request, res: Response)
   }
 });
 
-apiRouter.post("/savings-goals", requireAuth, async (req: Request, res: Response) => {
+apiRouter.post("/savings-goals", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { name, targetAmount, currentAmount, deadline } = req.body;
@@ -378,7 +414,7 @@ apiRouter.post("/savings-goals", requireAuth, async (req: Request, res: Response
   }
 });
 
-apiRouter.put("/savings-goals/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.put("/savings-goals/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -402,7 +438,7 @@ apiRouter.put("/savings-goals/:id", requireAuth, async (req: Request, res: Respo
   }
 });
 
-apiRouter.delete("/savings-goals/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.delete("/savings-goals/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -420,7 +456,7 @@ apiRouter.delete("/savings-goals/:id", requireAuth, async (req: Request, res: Re
 });
 
 // --- INVESTMENTS (INVESTASI) ---
-apiRouter.get("/investments", requireAuth, async (req: Request, res: Response) => {
+apiRouter.get("/investments", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const investments = await dbService.getInvestments(userId);
@@ -430,7 +466,7 @@ apiRouter.get("/investments", requireAuth, async (req: Request, res: Response) =
   }
 });
 
-apiRouter.post("/investments", requireAuth, async (req: Request, res: Response) => {
+apiRouter.post("/investments", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const {
@@ -491,7 +527,7 @@ apiRouter.post("/investments", requireAuth, async (req: Request, res: Response) 
   }
 });
 
-apiRouter.post("/investments/refresh", requireAuth, async (req: Request, res: Response) => {
+apiRouter.post("/investments/refresh", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const investments = await dbService.getInvestments(userId);
@@ -617,7 +653,7 @@ apiRouter.post("/investments/refresh", requireAuth, async (req: Request, res: Re
   }
 });
 
-apiRouter.put("/investments/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.put("/investments/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -682,7 +718,7 @@ apiRouter.put("/investments/:id", requireAuth, async (req: Request, res: Respons
   }
 });
 
-apiRouter.delete("/investments/:id", requireAuth, async (req: Request, res: Response) => {
+apiRouter.delete("/investments/:id", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -775,7 +811,7 @@ apiRouter.post("/admin/db-init", requireAdmin, async (req: Request, res: Respons
 });
 
 // --- AI SCAN RECEIPT OCR (GEMINI API) ---
-apiRouter.post("/scan-receipt", requireAuth, async (req: Request, res: Response) => {
+apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { base64Image, mimeType } = req.body; // base64Image must not have header 'data:image/...;base64,'

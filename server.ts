@@ -52,38 +52,35 @@ app.use("/api", (req, res, next) => {
 
   const originalJson = res.json;
   res.json = function (body) {
+    let formattedBody = body;
     if (body && typeof body === "object") {
       const isError = res.statusCode >= 400 || body.error !== undefined || body.success === false;
       if (isError) {
-        if (body.success === undefined) {
-          body.success = false;
-        }
-        // Enforce success: false and message: "..."
         const errorMsg = body.error || body.message || "Ralat pelayan dalaman berlaku.";
-        body.error = errorMsg;
-        body.message = errorMsg;
-        // Clean up standard payload properties if they leak
-        delete body.data;
+        formattedBody = {
+          success: false,
+          error: errorMsg,
+          message: errorMsg
+        };
       } else {
-        if (body.success === undefined) {
-          body.success = true;
-        }
-        // Enforce success: true and data: ...
-        if (body.data === undefined) {
-          // Clone the body to set it as data
+        const hasSuccess = body.success !== undefined ? body.success : true;
+        if (body.success !== undefined && body.data !== undefined) {
+          // Already formatted
+          formattedBody = body;
+        } else {
+          // Format it safely without mutating the original object in-place
           const cloned = { ...body };
-          delete cloned.success;
-          body.data = cloned;
-          // Remove top-level non-conforming fields to avoid cluttering response
-          Object.keys(cloned).forEach(key => {
-            if (key !== "data" && key !== "success") {
-              delete body[key];
-            }
-          });
+          if ("success" in cloned) {
+            delete (cloned as any).success;
+          }
+          formattedBody = {
+            success: hasSuccess,
+            data: cloned
+          };
         }
       }
     }
-    return originalJson.call(this, body);
+    return originalJson.call(this, formattedBody);
   };
   next();
 });
@@ -96,8 +93,8 @@ app.get("/api/health", (req, res) => {
 // Mount the Express API Router
 app.use("/api", apiRouter);
 
-// Catch-all 404 for any unmatched /api routes
-app.use("/api/*", (req, res) => {
+// Catch-all 404 for any unmatched /api routes (with or without trailing slashes or subpaths)
+app.use("/api", (req, res) => {
   console.log(`[404] API Route Not Found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
@@ -133,6 +130,12 @@ async function startServer() {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
+      if (req.path.startsWith("/api")) {
+        return res.status(404).json({
+          success: false,
+          error: `Laluan ${req.method} ${req.originalUrl} tidak ditemui.`
+        });
+      }
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

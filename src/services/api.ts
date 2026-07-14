@@ -13,7 +13,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   const headers = {
     "Content-Type": "application/json",
-    ...(activeUserId ? { "x-user-id": activeUserId } : {}),
+    ...(activeUserId ? { 
+      "x-user-id": activeUserId,
+      "x-profile-id": activeUserId 
+    } : {}),
     ...options.headers,
   };
 
@@ -21,6 +24,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options,
     headers,
   });
+
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    const text = await response.text();
+    console.error("Non-JSON response received:", text.substring(0, 200));
+    throw new Error(`Pelayan mengembalikan respons bukan JSON (Status ${response.status}). Sila hubungi admin atau cuba lagi.`);
+  }
 
   const data = await response.json();
 
@@ -91,14 +101,15 @@ export const api = {
 
     try {
       // Fetch accounts to check if session userId is still valid on server
-      const res = await request<{ accounts: Account[] }>("/accounts");
-      // If server returns successfully, user session is valid. Let's return a partial session object
-      // We will refresh user details from login session or local profile
+      await request<{ accounts: Account[] }>("/accounts");
+      // Return details for the exact static profile
+      const isNibras = activeUserId === "11111111-1111-1111-1111-111111111111";
+      const isZenita = activeUserId === "22222222-2222-2222-2222-222222222222";
       return {
         id: activeUserId,
-        email: activeUserId === "admin-123" ? "admin@kitapunya.id" : "user@kitapunya.id",
-        fullName: activeUserId === "admin-123" ? "Admin KitaPunya" : "User KitaPunya",
-        role: activeUserId === "admin-123" ? "admin" : "user",
+        email: isNibras ? "nibras@kitapunya.id" : isZenita ? "zenita@kitapunya.id" : "bersama@kitapunya.id",
+        fullName: isNibras ? "Nibras" : isZenita ? "Zenita" : "Uang Bersama",
+        role: (isNibras || isZenita) ? "user" : "admin",
       };
     } catch (e) {
       if (typeof window !== "undefined") {
@@ -111,7 +122,7 @@ export const api = {
   // --- ACCOUNTS ---
   async getAccounts(): Promise<Account[]> {
     const res = await request<{ accounts: Account[] }>("/accounts");
-    return res.accounts;
+    return res?.accounts || [];
   },
 
   async createAccount(acc: Omit<Account, "id" | "userId" | "createdAt">): Promise<Account> {
@@ -137,7 +148,7 @@ export const api = {
   // --- CATEGORIES ---
   async getCategories(): Promise<Category[]> {
     const res = await request<{ categories: Category[] }>("/categories");
-    return res.categories;
+    return res?.categories || [];
   },
 
   async createCategory(cat: Omit<Category, "id" | "userId" | "createdAt">): Promise<Category> {
@@ -164,7 +175,7 @@ export const api = {
   async getTransactions(filters?: { accountId?: string; categoryId?: string; startDate?: string; endDate?: string; search?: string }): Promise<Transaction[]> {
     const query = filters ? "?" + new URLSearchParams(filters as any).toString() : "";
     const res = await request<{ transactions: Transaction[] }>(`/transactions${query}`);
-    return res.transactions;
+    return res?.transactions || [];
   },
 
   async createTransaction(tx: Omit<Transaction, "id" | "userId" | "createdAt">): Promise<Transaction> {
@@ -183,7 +194,7 @@ export const api = {
   async getBudgets(month?: string): Promise<Budget[]> {
     const query = month ? `?month=${month}` : "";
     const res = await request<{ budgets: Budget[] }>(`/budgets${query}`);
-    return res.budgets;
+    return res?.budgets || [];
   },
 
   async createOrUpdateBudget(budget: { categoryId: string; amount: number; month: string }): Promise<Budget> {
@@ -197,7 +208,7 @@ export const api = {
   // --- SAVINGS GOALS ---
   async getSavingsGoals(): Promise<SavingsGoal[]> {
     const res = await request<{ goals: SavingsGoal[] }>("/savings-goals");
-    return res.goals;
+    return res?.goals || [];
   },
 
   async createSavingsGoal(goal: Omit<SavingsGoal, "id" | "userId" | "createdAt">): Promise<SavingsGoal> {
@@ -223,7 +234,7 @@ export const api = {
   // --- INVESTMENTS ---
   async getInvestments(): Promise<Investment[]> {
     const res = await request<{ investments: Investment[] }>("/investments");
-    return res.investments;
+    return res?.investments || [];
   },
 
   async createInvestment(inv: Omit<Investment, "id" | "userId" | "createdAt">): Promise<Investment> {
@@ -269,7 +280,7 @@ export const api = {
   // --- ADMIN TOOLS ---
   async getAdminUsers(): Promise<User[]> {
     const res = await request<{ users: User[] }>("/admin/users");
-    return res.users;
+    return res?.users || [];
   },
 
   async updateAdminUserRole(id: string, role: "admin" | "user"): Promise<User> {
@@ -282,7 +293,7 @@ export const api = {
 
   async getAdminLogs(): Promise<ActivityLog[]> {
     const res = await request<{ logs: ActivityLog[] }>("/logs");
-    return res.logs;
+    return res?.logs || [];
   },
 
   async initializeDatabaseSchema(): Promise<{ success: boolean; log: string }> {
