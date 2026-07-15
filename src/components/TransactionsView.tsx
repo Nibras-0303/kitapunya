@@ -14,11 +14,16 @@ import {
   Loader2,
   FileText,
   Upload,
-  CheckCircle2
+  CheckCircle2,
+  Video,
+  VideoOff,
+  RefreshCw,
+  X
 } from "lucide-react";
 import { Account, Transaction, Category } from "../types.js";
 import { formatRupiah, formatDate } from "../utils/format.js";
 import { api } from "../services/api.js";
+import { uploadReceiptImage } from "../supabaseClient.js";
 
 interface TransactionsViewProps {
   accounts: Account[];
@@ -72,6 +77,11 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
   const [ocrSelectedImage, setOcrSelectedImage] = useState<string | null>(null); // base64 string
+  const [selectedFile, setSelectedFile] = useState<File | Blob | null>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const [activeUploadTab, setActiveUploadTab] = useState<"gallery" | "camera-live" | "camera-system">("gallery");
 
   // Pre-loaded Sample Receipts for quick testing
   const sampleReceipts = [
@@ -202,6 +212,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setOcrSelectedImage(reader.result as string);
@@ -211,6 +222,76 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     }
   };
 
+  // Live Camera Controls
+  const startCamera = async () => {
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      setCameraStream(stream);
+      // Wait for a brief tick to ensure video element is bound
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (err: any) {
+      console.error("Gagal mengakses kamera:", err);
+      let errMsg = "Izin akses kamera ditolak.";
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        errMsg = "Izin akses kamera ditolak. Sila benarkan kebenaran kamera dalam pelayar anda atau gunakan pilihan 'Pilih Fail' biasa.";
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        errMsg = "Tiada perkakasan kamera dikesan pada peranti ini.";
+      } else {
+        errMsg = `Ralat kamera: ${err.message || err}`;
+      }
+      setCameraError(errMsg);
+      showToast(errMsg, "error");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg");
+        setOcrSelectedImage(dataUrl);
+        
+        // Convert to blob for upload
+        canvas.toBlob((blob) => {
+          if (blob) {
+            setSelectedFile(blob);
+          }
+        }, "image/jpeg");
+        
+        showToast("Gambar berjaya ditangkap!", "success");
+        stopCamera();
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    if (!isOcrModalOpen) {
+      stopCamera();
+    }
+    return () => {
+      stopCamera();
+    };
+  }, [isOcrModalOpen]);
+
   // Run AI Scan via Gemini API
   const handleOcrScan = async (sampleIndex?: number) => {
     setIsOcrLoading(true);
@@ -219,6 +300,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     try {
       let finalBase64 = "";
       let simulatedResult = null;
+      let publicImageUrl = "";
 
       if (sampleIndex !== undefined) {
         // Pre-loaded sample
@@ -227,6 +309,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         finalBase64 = sample.base64Sim;
         simulatedResult = sample.mockResult;
         setOcrSelectedImage(sample.url);
+        publicImageUrl = sample.url;
       } else {
         // Uploaded custom file
         if (!ocrSelectedImage) {
@@ -234,6 +317,29 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           setIsOcrLoading(false);
           return;
         }
+
+        setOcrStatus("Memuat naik gambar ke Supabase Storage...");
+        try {
+          let fileToUpload = selectedFile;
+          if (!fileToUpload) {
+            const mime = ocrSelectedImage.split(";")[0]?.split(":")[1] || "image/jpeg";
+            const b64 = ocrSelectedImage.split(",")[1] || ocrSelectedImage;
+            const byteCharacters = atob(b64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            fileToUpload = new Blob([byteArray], { type: mime });
+          }
+
+          publicImageUrl = await uploadReceiptImage(fileToUpload);
+          showToast("Imej berjaya disimpan ke Supabase Storage!", "success");
+        } catch (uploadErr: any) {
+          console.error("Supabase Storage Upload Error:", uploadErr);
+          showToast(`Gagal muat naik ke Supabase Storage: ${uploadErr.message || uploadErr}`, "error");
+        }
+
         // Extract base64 payload from data url
         finalBase64 = ocrSelectedImage.split(",")[1] || ocrSelectedImage;
       }
@@ -274,10 +380,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         setCategoryId(matchedCat.id);
       }
 
-      if (ocrSelectedImage && ocrSelectedImage.startsWith("http")) {
-        setReceiptUrl(ocrSelectedImage);
-      } else if (sampleIndex !== undefined) {
-        setReceiptUrl(sampleReceipts[sampleIndex].url);
+      if (publicImageUrl) {
+        setReceiptUrl(publicImageUrl);
+      } else {
+        setReceiptUrl("");
       }
 
       showToast("Analisis Pintar AI Selesai! Borang telah diisi secara automatik.", "success");
@@ -782,28 +888,168 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
 
                 {/* Option 2: Upload File */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <span className="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 tracking-wider block">
                     Muat Naik Gambar Resit Anda Sendiri
                   </span>
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl cursor-pointer bg-zinc-50 hover:bg-zinc-100/50 dark:bg-zinc-900/20 dark:hover:bg-zinc-900/40 transition-all">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                        <Upload size={24} className="text-zinc-400 dark:text-zinc-500 mb-2" />
-                        <p className="mb-1 text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                          Klik untuk memuat naik resit
-                        </p>
-                        <p className="text-[10px] text-zinc-400">
-                          Format PNG, JPG, JPEG (Maks. 5MB)
-                        </p>
+                  
+                  {/* Tab Selector */}
+                  <div className="flex border-b border-zinc-200 dark:border-zinc-800 p-1 bg-zinc-100/50 dark:bg-zinc-900/40 rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        stopCamera();
+                        setActiveUploadTab("gallery");
+                      }}
+                      className={`flex-1 py-2 text-xs font-bold transition-all text-center rounded-xl ${
+                        activeUploadTab === "gallery"
+                          ? "bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-400 shadow-sm"
+                          : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                      }`}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <Upload size={14} />
+                        Galeri / Fail
+                      </span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveUploadTab("camera-live");
+                        startCamera();
+                      }}
+                      className={`flex-1 py-2 text-xs font-bold transition-all text-center rounded-xl ${
+                        activeUploadTab === "camera-live"
+                          ? "bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-400 shadow-sm"
+                          : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                      }`}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <Video size={14} />
+                        Kamera Langsung
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        stopCamera();
+                        setActiveUploadTab("camera-system");
+                      }}
+                      className={`flex-1 py-2 text-xs font-bold transition-all text-center rounded-xl ${
+                        activeUploadTab === "camera-system"
+                          ? "bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-400 shadow-sm"
+                          : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                      }`}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <Camera size={14} />
+                        Kamera Sistem
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Tab Content */}
+                  <div className="mt-2">
+                    {activeUploadTab === "gallery" && (
+                      <div className="flex items-center justify-center w-full">
+                        <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl cursor-pointer bg-zinc-50 hover:bg-zinc-100/50 dark:bg-zinc-900/20 dark:hover:bg-zinc-900/40 transition-all">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <Upload size={24} className="text-zinc-400 dark:text-zinc-500 mb-2" />
+                            <p className="mb-1 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                              Klik untuk memilih dari galeri peranti
+                            </p>
+                            <p className="text-[10px] text-zinc-400">
+                              Format PNG, JPG, JPEG (Maks. 5MB)
+                            </p>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileChange}
+                          />
+                        </label>
                       </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
-                    </label>
+                    )}
+
+                    {activeUploadTab === "camera-live" && (
+                      <div className="flex flex-col items-center justify-center w-full p-4 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50 dark:bg-zinc-900/20">
+                        {cameraStream ? (
+                          <div className="relative w-full max-w-sm aspect-video overflow-hidden rounded-2xl bg-black border border-zinc-700">
+                            <video
+                              ref={videoRef}
+                              autoPlay
+                              playsInline
+                              muted
+                              className="w-full h-full object-cover transform"
+                            />
+                            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4">
+                              <button
+                                type="button"
+                                onClick={capturePhoto}
+                                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2"
+                              >
+                                <Camera size={14} />
+                                Tangkap Gambar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={stopCamera}
+                                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2"
+                              >
+                                <VideoOff size={14} />
+                                Batal
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-6">
+                            {cameraError ? (
+                              <div className="mb-4 text-xs font-semibold text-rose-500 max-w-xs mx-auto">
+                                {cameraError}
+                              </div>
+                            ) : (
+                              <p className="mb-4 text-xs text-zinc-500">
+                                Sila benarkan akses kamera untuk menangkap resit anda secara langsung.
+                              </p>
+                            )}
+                            <button
+                              type="button"
+                              onClick={startCamera}
+                              className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center gap-2 mx-auto"
+                            >
+                              <RefreshCw size={14} />
+                              Aktifkan Kamera Langsung
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeUploadTab === "camera-system" && (
+                      <div className="flex items-center justify-center w-full">
+                        <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl cursor-pointer bg-zinc-50 hover:bg-zinc-100/50 dark:bg-zinc-900/20 dark:hover:bg-zinc-900/40 transition-all">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <Camera size={24} className="text-zinc-400 dark:text-zinc-500 mb-2" />
+                            <p className="mb-1 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                              Klik untuk mengambil foto resit terus dari kamera peranti
+                            </p>
+                            <p className="text-[10px] text-zinc-400">
+                              Akan mengaktifkan kamera bawaan telefon anda secara langsung
+                            </p>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={handleFileChange}
+                          />
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
 
