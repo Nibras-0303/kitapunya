@@ -42,7 +42,8 @@ import {
   History, 
   Moon, 
   Sun, 
-  ArrowLeft 
+  ArrowLeft,
+  Image
 } from "lucide-react";
 
 export default function App() {
@@ -69,6 +70,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   // --- DATA STATES ---
+  const [autoOpenOcr, setAutoOpenOcr] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -456,6 +458,8 @@ export default function App() {
               onCreateTransaction={handleCreateTransaction}
               onDeleteTransaction={handleDeleteTransaction}
               showToast={showToast}
+              autoOpenOcr={autoOpenOcr}
+              onOcrClosed={() => setAutoOpenOcr(false)}
             />
           )}
 
@@ -573,10 +577,22 @@ export default function App() {
                   <span className="text-[10px] text-zinc-400 mt-1">Prestasi saham & logam</span>
                 </button>
 
+                {/* Gallery Card */}
+                <button
+                  onClick={() => setView("gallery")}
+                  className="flex flex-col items-center justify-center p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm transition-all group cursor-pointer text-center"
+                >
+                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                    <Image size={24} />
+                  </div>
+                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Galeri Resit</span>
+                  <span className="text-[10px] text-zinc-400 mt-1">Arkib resit perbelanjaan</span>
+                </button>
+
                 {/* Logs Card */}
                 <button
                   onClick={() => setView("admin")}
-                  className="flex flex-col items-center justify-center p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm transition-all group cursor-pointer text-center col-span-2 md:col-span-1"
+                  className="flex flex-col items-center justify-center p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm transition-all group cursor-pointer text-center"
                 >
                   <div className="p-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
                     <History size={24} />
@@ -594,7 +610,10 @@ export default function App() {
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-t border-zinc-200 dark:border-zinc-800/80 px-2 py-2 flex items-center justify-around shadow-lg">
         {/* Item 1: Dashboard */}
         <button
-          onClick={() => setView("dashboard")}
+          onClick={() => {
+            setView("dashboard");
+            setAutoOpenOcr(false);
+          }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
             currentView === "dashboard"
               ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
@@ -607,9 +626,12 @@ export default function App() {
 
         {/* Item 2: Transaksi */}
         <button
-          onClick={() => setView("transactions")}
+          onClick={() => {
+            setView("transactions");
+            setAutoOpenOcr(false);
+          }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
-            currentView === "transactions"
+            currentView === "transactions" && !autoOpenOcr
               ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
               : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-medium"
           }`}
@@ -620,9 +642,13 @@ export default function App() {
 
         {/* Item 3: Scan */}
         <button
-          onClick={() => setView("gallery")}
+          onClick={() => {
+            console.log("SCAN CLICKED");
+            setView("transactions");
+            setAutoOpenOcr(true);
+          }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
-            currentView === "gallery"
+            currentView === "transactions" && autoOpenOcr
               ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
               : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-medium"
           }`}

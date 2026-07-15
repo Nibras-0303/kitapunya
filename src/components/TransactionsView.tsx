@@ -41,6 +41,8 @@ interface TransactionsViewProps {
   }) => Promise<void>;
   onDeleteTransaction: (id: string) => Promise<void>;
   showToast: (msg: string, type: "success" | "error" | "info") => void;
+  autoOpenOcr?: boolean;
+  onOcrClosed?: () => void;
 }
 
 export const TransactionsView: React.FC<TransactionsViewProps> = ({
@@ -50,6 +52,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   onCreateTransaction,
   onDeleteTransaction,
   showToast,
+  autoOpenOcr,
+  onOcrClosed,
 }) => {
   const activeUserId = typeof window !== "undefined" ? localStorage.getItem("kitapunya_active_userid") : null;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -82,46 +86,25 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [activeUploadTab, setActiveUploadTab] = useState<"gallery" | "camera-live" | "camera-system">("gallery");
+  const [cameraActive, setCameraActive] = useState(false);
+  const galleryInputRef = React.useRef<HTMLInputElement>(null);
+  const systemCameraInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Pre-loaded Sample Receipts for quick testing
-  const sampleReceipts = [
-    {
-      name: "Nota Kedai Starbucks Coffee",
-      url: "https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=600&auto=format&fit=crop",
-      desc: "Simulasi resit membeli kopi di Starbucks. Jumlah jangkaan: Rp 85.000, Kategori: Makanan & Minuman.",
-      base64Sim: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", // Minimal dummy base64
-      mockResult: {
-        totalAmount: 85000,
-        categoryName: "Makanan & Minuman",
-        description: "Starbucks Coffee Kiara Mall",
-        date: new Date().toISOString().substring(0, 10),
-      }
-    },
-    {
-      name: "Nota Petrol Shell",
-      url: "https://images.unsplash.com/photo-1527018601619-a508a2be00cd?q=80&w=600&auto=format&fit=crop",
-      desc: "Simulasi resit mengisi petrol di stesen Shell. Jumlah jangkaan: Rp 250.000, Kategori: Transportasi.",
-      base64Sim: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-      mockResult: {
-        totalAmount: 250000,
-        categoryName: "Transportasi",
-        description: "Stesen Minyak Shell Utama",
-        date: new Date().toISOString().substring(0, 10),
-      }
-    },
-    {
-      name: "Nota Supermarket Indomaret",
-      url: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=600&auto=format&fit=crop",
-      desc: "Simulasi nota pembelian barang runcit bulanan. Jumlah jangkaan: Rp 420.000, Kategori: Belanja Bulanan.",
-      base64Sim: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-      mockResult: {
-        totalAmount: 420000,
-        categoryName: "Belanja Bulanan",
-        description: "Indomaret Supermarket",
-        date: new Date().toISOString().substring(0, 10),
-      }
+  const handleCloseOcrModal = () => {
+    setIsOcrModalOpen(false);
+    if (onOcrClosed) {
+      onOcrClosed();
     }
-  ];
+  };
+
+  React.useEffect(() => {
+    if (autoOpenOcr) {
+      setOcrSelectedImage(null);
+      setIsOcrModalOpen(true);
+    }
+  }, [autoOpenOcr]);
+
+
 
   // --- FILTER LOGIC ---
   const filteredTransactions = useMemo(() => {
@@ -208,39 +191,61 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     setIsAddModalOpen(false);
   };
 
-  // Convert File to Base64 helper
+  // Convert File to Base64 helper with validation and auto-scanning
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setOcrSelectedImage(reader.result as string);
-        showToast("Gambar resit dimuat naik. Sedia untuk diimbas!", "info");
-      };
-      reader.readAsDataURL(file);
+    if (!file) {
+      showToast("Pemilihan fail dibatalkan atau tiada fail dipilih.", "info");
+      return;
     }
+
+    // Validate size (Maksimal ukuran file 10 MB)
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("Ralat: Ukuran fail melebihi had maksimum 10MB.", "error");
+      return;
+    }
+
+    // Validate type (Tolak file selain gambar)
+    if (!file.type.startsWith("image/")) {
+      showToast("Ralat: Fail yang dipilih bukan gambar. Sila pilih gambar JPG, JPEG, PNG, atau WEBP sahaja.", "error");
+      return;
+    }
+
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Data = reader.result as string;
+      setOcrSelectedImage(base64Data);
+      showToast("Fail berjaya dimuat naik! Mengimbas secara automatik...", "success");
+      // Auto-trigger scan
+      handleOcrScan(file, base64Data);
+    };
+    reader.onerror = () => {
+      showToast("Gagal membaca fail gambar.", "error");
+    };
+    reader.readAsDataURL(file);
+    // Reset file input target value so onChange triggers every time even if selecting same file
+    e.target.value = "";
   };
 
   // Live Camera Controls
   const startCamera = async () => {
+    console.log("CAMERA STARTING");
     setCameraError(null);
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Pelayar anda tidak menyokong akses kamera secara langsung (getUserMedia tidak tersedia). Sila gunakan Kamera Sistem Peranti.");
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
       setCameraStream(stream);
-      // Wait for a brief tick to ensure video element is bound
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      }, 100);
+      console.log("CAMERA SUCCESS");
     } catch (err: any) {
-      console.error("Gagal mengakses kamera:", err);
+      console.error("CAMERA FAILED", err);
       let errMsg = "Izin akses kamera ditolak.";
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        errMsg = "Izin akses kamera ditolak. Sila benarkan kebenaran kamera dalam pelayar anda atau gunakan pilihan 'Pilih Fail' biasa.";
+        errMsg = "Izin akses kamera ditolak. Sila benarkan kebenaran kamera dalam tetapan pelayar anda atau gunakan Kamera Sistem Peranti.";
       } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
         errMsg = "Tiada perkakasan kamera dikesan pada peranti ini.";
       } else {
@@ -256,6 +261,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       cameraStream.getTracks().forEach((track) => track.stop());
       setCameraStream(null);
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
   };
 
   const capturePhoto = () => {
@@ -270,79 +278,78 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         const dataUrl = canvas.toDataURL("image/jpeg");
         setOcrSelectedImage(dataUrl);
         
-        // Convert to blob for upload
+        // Convert to blob for upload and auto trigger scan
         canvas.toBlob((blob) => {
           if (blob) {
             setSelectedFile(blob);
+            stopCamera();
+            setCameraActive(false);
+            showToast("Gambar berjaya ditangkap! Mengimbas secara automatik...", "success");
+            handleOcrScan(blob, dataUrl);
           }
         }, "image/jpeg");
-        
-        showToast("Gambar berjaya ditangkap!", "success");
-        stopCamera();
       }
     }
   };
 
   React.useEffect(() => {
-    if (!isOcrModalOpen) {
+    if (cameraActive && cameraStream && videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraStream, cameraActive]);
+
+  React.useEffect(() => {
+    if (!isOcrModalOpen || !cameraActive) {
       stopCamera();
     }
     return () => {
       stopCamera();
     };
-  }, [isOcrModalOpen]);
+  }, [isOcrModalOpen, cameraActive]);
 
-  // Run AI Scan via Gemini API
-  const handleOcrScan = async (sampleIndex?: number) => {
+  // Run AI Scan via Gemini API with option to receive immediate inputs
+  const handleOcrScan = async (customFile?: File | Blob, customBase64?: string) => {
     setIsOcrLoading(true);
     setOcrStatus("Menyambung ke Google Gemini API...");
 
     try {
       let finalBase64 = "";
-      let simulatedResult = null;
       let publicImageUrl = "";
 
-      if (sampleIndex !== undefined) {
-        // Pre-loaded sample
-        setOcrStatus("Mengimbas resit sampel...");
-        const sample = sampleReceipts[sampleIndex];
-        finalBase64 = sample.base64Sim;
-        simulatedResult = sample.mockResult;
-        setOcrSelectedImage(sample.url);
-        publicImageUrl = sample.url;
-      } else {
-        // Uploaded custom file
-        if (!ocrSelectedImage) {
-          showToast("Sila pilih gambar resit atau gunakan resit sampel.", "error");
-          setIsOcrLoading(false);
-          return;
-        }
+      // Uploaded custom file
+      const activeBase64 = customBase64 || ocrSelectedImage;
+      const activeFile = customFile || selectedFile;
 
-        setOcrStatus("Memuat naik gambar ke Supabase Storage...");
-        try {
-          let fileToUpload = selectedFile;
-          if (!fileToUpload) {
-            const mime = ocrSelectedImage.split(";")[0]?.split(":")[1] || "image/jpeg";
-            const b64 = ocrSelectedImage.split(",")[1] || ocrSelectedImage;
-            const byteCharacters = atob(b64);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-              byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            fileToUpload = new Blob([byteArray], { type: mime });
-          }
-
-          publicImageUrl = await uploadReceiptImage(fileToUpload);
-          showToast("Imej berjaya disimpan ke Supabase Storage!", "success");
-        } catch (uploadErr: any) {
-          console.error("Supabase Storage Upload Error:", uploadErr);
-          showToast(`Gagal muat naik ke Supabase Storage: ${uploadErr.message || uploadErr}`, "error");
-        }
-
-        // Extract base64 payload from data url
-        finalBase64 = ocrSelectedImage.split(",")[1] || ocrSelectedImage;
+      if (!activeBase64) {
+        showToast("Sila pilih gambar resit atau gunakan kamera peranti.", "error");
+        setIsOcrLoading(false);
+        return;
       }
+
+      setOcrStatus("Memuat naik gambar ke Supabase Storage...");
+      try {
+        let fileToUpload = activeFile;
+        if (!fileToUpload) {
+          const mime = activeBase64.split(";")[0]?.split(":")[1] || "image/jpeg";
+          const b64 = activeBase64.split(",")[1] || activeBase64;
+          const byteCharacters = atob(b64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          fileToUpload = new Blob([byteArray], { type: mime });
+        }
+
+        publicImageUrl = await uploadReceiptImage(fileToUpload);
+        showToast("Imej berjaya disimpan ke Supabase Storage!", "success");
+      } catch (uploadErr: any) {
+        console.error("Supabase Storage Upload Error:", uploadErr);
+        showToast(`Gagal muat naik ke Supabase Storage: ${uploadErr.message || uploadErr}`, "error");
+      }
+
+      // Extract base64 payload from data url
+      finalBase64 = activeBase64.split(",")[1] || activeBase64;
 
       // Small status simulation to make it look spectacular
       setTimeout(() => setOcrStatus("Gemini AI sedang membaca huruf resit..."), 1200);
@@ -357,7 +364,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         console.warn("Real OCR call failed (possibly due to missing Gemini key). Falling back to smart mock simulation:", err);
         // Fallback to simulated result so they can ALWAYS play with the AI OCR demo!
         await new Promise((r) => setTimeout(r, 4500));
-        result = simulatedResult || {
+        result = {
           totalAmount: 125000,
           categoryName: "Makanan & Minuman",
           description: "Makan Tengah Hari Restoran",
@@ -383,11 +390,11 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       if (publicImageUrl) {
         setReceiptUrl(publicImageUrl);
       } else {
-        setReceiptUrl("");
+        setReceiptUrl(customBase64 || ocrSelectedImage || "");
       }
 
       showToast("Analisis Pintar AI Selesai! Borang telah diisi secara automatik.", "success");
-      setIsOcrModalOpen(false);
+      handleCloseOcrModal();
       setIsAddModalOpen(true); // Open transaction form so they can review and save
     } catch (err: any) {
       showToast("Ralat mengimbas resit: " + err.message, "error");
@@ -836,252 +843,181 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               Kecerdasan Buatan (Google Gemini) akan membaca nota perbelanjaan anda secara automatik, mengekstrak harga, klasifikasi kategori, dan mengisi borang.
             </p>
 
+            {/* Hidden Inputs for File Selection */}
+            <input
+              id="gallery-file-input"
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={handleFileChange}
+            />
+            <input
+              id="system-camera-file-input"
+              ref={systemCameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              onChange={handleFileChange}
+            />
+
             {isOcrLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Loader2 size={44} className="text-violet-600 animate-spin" />
-                <div className="text-center">
-                  <h4 className="font-bold text-sm text-zinc-800 dark:text-zinc-200">
-                    Sistem Sedang Mengimbas Nota...
-                  </h4>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 animate-pulse mt-1 font-semibold">
-                    {ocrStatus}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Option 1: Quick Sample Receipts */}
-                <div className="space-y-3">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 tracking-wider block">
-                    Cara Cepat: Uji Dengan Sampel Resit Terbina
-                  </span>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {sampleReceipts.map((sample, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => handleOcrScan(i)}
-                        className="p-3 text-left border border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-2xl bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/50 dark:hover:bg-violet-950/10 transition-all flex flex-col justify-between h-36"
-                      >
-                        <div>
-                          <h4 className="font-bold text-xs text-zinc-800 dark:text-zinc-200">
-                            {sample.name}
-                          </h4>
-                          <p className="text-[10px] text-zinc-500 mt-1 line-clamp-3">
-                            {sample.desc}
-                          </p>
-                        </div>
-                        <span className="text-[10px] text-violet-600 font-extrabold flex items-center gap-1 mt-2">
-                          Pilih & Imbas
-                          <ArrowRight size={10} />
-                        </span>
-                      </button>
-                    ))}
+              <div className="flex flex-col items-center justify-center py-6 space-y-5">
+                {ocrSelectedImage && (
+                  <div className="w-full max-w-xs aspect-[4/3] rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-md relative">
+                    <img
+                      src={ocrSelectedImage}
+                      alt="Preview Resit"
+                      className="w-full h-full object-cover blur-[0.5px]"
+                      referrerPolicy="no-referrer"
+                    />
+                    {/* Scanner laser line animation */}
+                    <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-500 animate-scanner shadow-[0_0_10px_#8b5cf6]"></div>
+                  </div>
+                )}
+                <div className="flex flex-col items-center space-y-2">
+                  <Loader2 size={36} className="text-violet-600 animate-spin" />
+                  <div className="text-center">
+                    <h4 className="font-extrabold text-sm text-zinc-800 dark:text-zinc-200">
+                      Sedang Menganalisis Gambar...
+                    </h4>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 animate-pulse mt-1 font-semibold">
+                      {ocrStatus}
+                    </p>
                   </div>
                 </div>
-
-                {/* Divider */}
-                <div className="relative flex py-2 items-center">
-                  <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
-                  <span className="flex-shrink mx-4 text-[10px] uppercase font-extrabold text-zinc-400 dark:text-zinc-500">ATAU</span>
-                  <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
+              </div>
+            ) : cameraActive ? (
+              <div className="space-y-4 p-4 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50 dark:bg-zinc-900/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase text-zinc-500 dark:text-zinc-400 tracking-wider flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    📷 Ambil Foto (Kamera Langsung)
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopCamera();
+                      setCameraActive(false);
+                    }}
+                    className="text-xs text-violet-600 dark:text-violet-400 hover:underline font-bold"
+                  >
+                    Kembali ke Pilihan
+                  </button>
                 </div>
 
-                {/* Option 2: Upload File */}
-                <div className="space-y-4">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 tracking-wider block">
-                    Muat Naik Gambar Resit Anda Sendiri
-                  </span>
-                  
-                  {/* Tab Selector */}
-                  <div className="flex border-b border-zinc-200 dark:border-zinc-800 p-1 bg-zinc-100/50 dark:bg-zinc-900/40 rounded-2xl">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        stopCamera();
-                        setActiveUploadTab("gallery");
-                      }}
-                      className={`flex-1 py-2 text-xs font-bold transition-all text-center rounded-xl ${
-                        activeUploadTab === "gallery"
-                          ? "bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-400 shadow-sm"
-                          : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-                      }`}
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        <Upload size={14} />
-                        Galeri / Fail
-                      </span>
-                    </button>
+                <div className="relative w-full max-w-sm mx-auto aspect-video overflow-hidden rounded-2xl bg-black border border-zinc-700 shadow-inner">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                  {!cameraStream && !cameraError && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/90 text-white text-xs gap-2">
+                      <Loader2 className="animate-spin text-violet-500" size={24} />
+                      <span>Memulakan kamera langsung...</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col items-center gap-3">
+                  {cameraError && (
+                    <div className="text-xs font-semibold text-rose-500 max-w-sm mx-auto bg-rose-50 dark:bg-rose-950/20 p-3 rounded-xl border border-rose-100 dark:border-rose-900/30 text-center">
+                      {cameraError}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    {cameraStream && (
+                      <button
+                        type="button"
+                        onClick={capturePhoto}
+                        className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <Camera size={14} />
+                        Tangkap Gambar
+                      </button>
+                    )}
                     
                     <button
                       type="button"
                       onClick={() => {
-                        setActiveUploadTab("camera-live");
-                        startCamera();
+                        console.log("SYSTEM CAMERA CLICKED");
+                        systemCameraInputRef.current?.click();
                       }}
-                      className={`flex-1 py-2 text-xs font-bold transition-all text-center rounded-xl ${
-                        activeUploadTab === "camera-live"
-                          ? "bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-400 shadow-sm"
-                          : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-                      }`}
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
                     >
-                      <span className="flex items-center justify-center gap-2">
-                        <Video size={14} />
-                        Kamera Langsung
-                      </span>
+                      <Camera size={14} />
+                      Gunakan Kamera Sistem Peranti
                     </button>
 
                     <button
                       type="button"
                       onClick={() => {
                         stopCamera();
-                        setActiveUploadTab("camera-system");
+                        setCameraActive(false);
                       }}
-                      className={`flex-1 py-2 text-xs font-bold transition-all text-center rounded-xl ${
-                        activeUploadTab === "camera-system"
-                          ? "bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-400 shadow-sm"
-                          : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-                      }`}
+                      className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
                     >
-                      <span className="flex items-center justify-center gap-2">
-                        <Camera size={14} />
-                        Kamera Sistem
-                      </span>
+                      <VideoOff size={14} />
+                      Kembali / Batal
                     </button>
-                  </div>
-
-                  {/* Tab Content */}
-                  <div className="mt-2">
-                    {activeUploadTab === "gallery" && (
-                      <div className="flex items-center justify-center w-full">
-                        <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl cursor-pointer bg-zinc-50 hover:bg-zinc-100/50 dark:bg-zinc-900/20 dark:hover:bg-zinc-900/40 transition-all">
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                            <Upload size={24} className="text-zinc-400 dark:text-zinc-500 mb-2" />
-                            <p className="mb-1 text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                              Klik untuk memilih dari galeri peranti
-                            </p>
-                            <p className="text-[10px] text-zinc-400">
-                              Format PNG, JPG, JPEG (Maks. 5MB)
-                            </p>
-                          </div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleFileChange}
-                          />
-                        </label>
-                      </div>
-                    )}
-
-                    {activeUploadTab === "camera-live" && (
-                      <div className="flex flex-col items-center justify-center w-full p-4 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50 dark:bg-zinc-900/20">
-                        {cameraStream ? (
-                          <div className="relative w-full max-w-sm aspect-video overflow-hidden rounded-2xl bg-black border border-zinc-700">
-                            <video
-                              ref={videoRef}
-                              autoPlay
-                              playsInline
-                              muted
-                              className="w-full h-full object-cover transform"
-                            />
-                            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4">
-                              <button
-                                type="button"
-                                onClick={capturePhoto}
-                                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2"
-                              >
-                                <Camera size={14} />
-                                Tangkap Gambar
-                              </button>
-                              <button
-                                type="button"
-                                onClick={stopCamera}
-                                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2"
-                              >
-                                <VideoOff size={14} />
-                                Batal
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center py-6">
-                            {cameraError ? (
-                              <div className="mb-4 text-xs font-semibold text-rose-500 max-w-xs mx-auto">
-                                {cameraError}
-                              </div>
-                            ) : (
-                              <p className="mb-4 text-xs text-zinc-500">
-                                Sila benarkan akses kamera untuk menangkap resit anda secara langsung.
-                              </p>
-                            )}
-                            <button
-                              type="button"
-                              onClick={startCamera}
-                              className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center gap-2 mx-auto"
-                            >
-                              <RefreshCw size={14} />
-                              Aktifkan Kamera Langsung
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {activeUploadTab === "camera-system" && (
-                      <div className="flex items-center justify-center w-full">
-                        <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl cursor-pointer bg-zinc-50 hover:bg-zinc-100/50 dark:bg-zinc-900/20 dark:hover:bg-zinc-900/40 transition-all">
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                            <Camera size={24} className="text-zinc-400 dark:text-zinc-500 mb-2" />
-                            <p className="mb-1 text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                              Klik untuk mengambil foto resit terus dari kamera peranti
-                            </p>
-                            <p className="text-[10px] text-zinc-400">
-                              Akan mengaktifkan kamera bawaan telefon anda secara langsung
-                            </p>
-                          </div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            className="hidden"
-                            onChange={handleFileChange}
-                          />
-                        </label>
-                      </div>
-                    )}
                   </div>
                 </div>
-
-                {/* Run Custom Scan Button if custom image uploaded */}
-                {ocrSelectedImage && !ocrSelectedImage.startsWith("http") && (
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 size={20} className="text-emerald-600" />
-                      <div>
-                        <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">
-                          Resit Anda Sedia Untuk Diimbas
-                        </span>
-                        <span className="text-[10px] text-zinc-500">
-                          Sedia menghantar imej ke Google Gemini model.
-                        </span>
-                      </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Two Large Choices Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Option: Ambil Foto */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCameraActive(true);
+                      startCamera();
+                    }}
+                    className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/10 dark:hover:bg-violet-950/5 transition-all text-center group cursor-pointer h-44 w-full"
+                  >
+                    <div className="p-4 bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+                      <Camera size={24} />
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleOcrScan()}
-                      className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs rounded-xl shadow transition-all"
-                    >
-                      Mula Analisis AI
-                    </button>
-                  </div>
-                )}
+                    <span className="font-extrabold text-sm text-zinc-800 dark:text-zinc-100">
+                      📷 Ambil Foto (Kamera)
+                    </span>
+                    <span className="text-[10px] text-zinc-500 mt-1 max-w-[180px]">
+                      Ambil foto resit secara langsung dengan kamera peranti anda
+                    </span>
+                  </button>
+
+                  {/* Option: Pilih dari Galeri */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      console.log("GALLERY SELECT CLICKED");
+                      galleryInputRef.current?.click();
+                    }}
+                    className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/10 dark:hover:bg-violet-950/5 transition-all text-center group cursor-pointer h-44 w-full"
+                  >
+                    <div className="p-4 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+                      <Upload size={24} />
+                    </div>
+                    <span className="font-extrabold text-sm text-zinc-800 dark:text-zinc-100">
+                      🖼️ Pilih dari Galeri
+                    </span>
+                    <span className="text-[10px] text-zinc-500 mt-1 max-w-[180px]">
+                      Pilih gambar JPG, JPEG, PNG, atau WEBP sedia ada dari peranti anda
+                    </span>
+                  </button>
+                </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                   <button
                     type="button"
-                    onClick={() => setIsOcrModalOpen(false)}
-                    className="px-4 py-2 text-xs font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-all"
+                    onClick={handleCloseOcrModal}
+                    className="px-4 py-2 text-xs font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-all cursor-pointer"
                   >
                     Tutup
                   </button>

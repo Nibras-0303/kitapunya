@@ -40,3 +40,21 @@
 .dark .scrollbar-thin::-webkit-scrollbar-thumb {
   background: #3f3f46;
 }
+
+@keyframes scanner {
+  0% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+.animate-scanner {
+  position: absolute;
+  animation: scanner 2.5s ease-in-out infinite;
+}
+
