@@ -1617,8 +1617,8 @@ export const dbService = {
     const zenitaIncome = zenitaTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
     const zenitaExpense = zenitaTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
 
-    const tabunganAcc = allAccounts.find(a => a.id === "a0000000-0000-0000-0000-000000000301");
-    const operasionalAcc = allAccounts.find(a => a.id === "a0000000-0000-0000-0000-000000000302");
+    const tabunganAcc = allAccounts.find(a => a.id === "a0000000-0000-0000-0000-000000000301" || a.type === "shared_savings");
+    const operasionalAcc = allAccounts.find(a => a.id === "a0000000-0000-0000-0000-000000000302" || a.type === "shared_spending");
     
     const tabunganBalance = tabunganAcc ? tabunganAcc.balance : 0;
     const operasionalBalance = operasionalAcc ? operasionalAcc.balance : 0;

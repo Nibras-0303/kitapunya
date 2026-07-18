@@ -18,7 +18,8 @@ import {
   Video,
   VideoOff,
   RefreshCw,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { Account, Transaction, Category } from "../types.js";
 import { formatRupiah, formatDate } from "../utils/format.js";
@@ -58,6 +59,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 }) => {
   const activeUserId = typeof window !== "undefined" ? localStorage.getItem("kitapunya_active_userid") : null;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
+  const [isOcrDestModalOpen, setIsOcrDestModalOpen] = useState(false);
+  const [isOcrConfirmModalOpen, setIsOcrConfirmModalOpen] = useState(false);
+  const [tempOcrResult, setTempOcrResult] = useState<any>(null);
   
   // Local Accounts States for Tambah Transaksi
   const [localAccounts, setLocalAccounts] = useState<Account[]>([]);
@@ -87,13 +92,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   };
 
   React.useEffect(() => {
-    if (isAddModalOpen) {
+    if (isAddModalOpen || isOcrConfirmModalOpen || isOcrDestModalOpen) {
       loadAccounts();
     }
-  }, [isAddModalOpen]);
-  const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
-  const [isOcrDestModalOpen, setIsOcrDestModalOpen] = useState(false);
-  const [tempOcrResult, setTempOcrResult] = useState<any>(null);
+  }, [isAddModalOpen, isOcrConfirmModalOpen, isOcrDestModalOpen]);
 
   // Filter States
   const [search, setSearch] = useState("");
@@ -391,9 +393,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       finalBase64 = activeBase64.split(",")[1] || activeBase64;
 
       // Small status simulation to make it look spectacular
-      setTimeout(() => setOcrStatus("Gemini AI sedang membaca huruf resit..."), 1200);
-      setTimeout(() => setOcrStatus("Mengekstrak jumlah keseluruhan perbelanjaan..."), 2400);
-      setTimeout(() => setOcrStatus("Mengklasifikasi kategori perbelanjaan pintar..."), 3600);
+      setTimeout(() => setOcrStatus("Tahap 1: Membaca teks gambar penuh (OCR)..."), 1000);
+      setTimeout(() => setOcrStatus("Tahap 2: AI melakukan parsing kedai, tanggal & barang..."), 2200);
+      setTimeout(() => setOcrStatus("Tahap 3: Memvalidasi nominal transaksi & menghitung akurasi..."), 3400);
 
       let result;
       // Make real API call to Express /scan-receipt endpoint
@@ -404,10 +406,17 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         // Fallback to simulated result so they can ALWAYS play with the AI OCR demo!
         await new Promise((r) => setTimeout(r, 4500));
         result = {
-          totalAmount: 125000,
-          categoryName: "Makanan & Minuman",
-          description: "Makan Tengah Hari Restoran",
+          rawOcrText: "MCDONALD'S INDONESIA\nJl. Slamet Riyadi No. 123\n\n1x PaNas Spesial   Rp45.000\n1x McFlurry Ore    Rp18.000\nSubtotal          Rp63.000\nTax 10%           Rp6.300\nTOTAL             Rp69.300\nCASH             Rp100.000\nCHANGE            Rp30.700\n\nTerima Kasih Atas Kunjungan Anda",
+          merchant: "McDonald's Indonesia",
           date: new Date().toISOString().substring(0, 10),
+          time: "13:45",
+          categoryName: "Makanan & Minuman",
+          items: [
+            { name: "PaNas Spesial", qty: 1, price: 45000 },
+            { name: "McFlurry Oreo", qty: 1, price: 18000 }
+          ],
+          totalAmount: 69300,
+          confidence: 96,
         };
       }
 
@@ -425,18 +434,27 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
       const activeImg = publicImageUrl || customBase64 || ocrSelectedImage || "";
 
-      // Store in tempOcrResult for the destination chooser popup
+      // Settle on default accountId
+      const defaultAccountId = localAccounts[0]?.id || "";
+
+      // Store in tempOcrResult for the receipt confirmation screen
       setTempOcrResult({
+        rawOcrText: result.rawOcrText || "",
+        merchant: result.merchant || "Merchant",
         amount: String(result.totalAmount),
-        description: `[AI Scan] ${result.description}`,
         date: result.date || new Date().toISOString().substring(0, 10),
+        time: result.time || "",
         categoryId: finalCategoryId,
+        description: `Imbasan nota dari ${result.merchant || "Merchant"}`,
         receiptImageUrl: activeImg,
+        confidence: result.confidence !== undefined ? result.confidence : 100,
+        items: result.items || [],
+        accountId: defaultAccountId,
       });
 
-      showToast("Analisis Pintar AI Selesai! Sila pilih akaun destinasi untuk transaksi ini.", "success");
+      showToast("Analisis Pintar AI Selesai! Sila semak semula butiran perbelanjaan.", "success");
       handleCloseOcrModal();
-      setIsOcrDestModalOpen(true); // Show the destination selector modal!
+      setIsOcrConfirmModalOpen(true); // Open the Confirmation/Review Modal!
     } catch (err: any) {
       showToast("Ralat mengimbas resit: " + err.message, "error");
     } finally {
@@ -457,6 +475,39 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     
     setIsOcrDestModalOpen(false);
     setIsAddModalOpen(true); // Open the review and save form!
+  };
+
+  const handleOcrConfirmSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tempOcrResult) return;
+
+    const parsedAmount = Number(tempOcrResult.amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      alert("Masukkan nilai jumlah transaksi yang sah.");
+      return;
+    }
+
+    const finalAccId = tempOcrResult.accountId || (localAccounts[0]?.id || "");
+    if (!finalAccId) {
+      alert("Sila pilih akaun sumber.");
+      return;
+    }
+
+    await onCreateTransaction({
+      accountId: finalAccId,
+      toAccountId: null,
+      categoryId: tempOcrResult.categoryId,
+      amount: parsedAmount,
+      type: "expense",
+      description: tempOcrResult.description || `Imbasan nota dari ${tempOcrResult.merchant}`,
+      date: tempOcrResult.date,
+      receiptImageUrl: tempOcrResult.receiptImageUrl || null,
+      transferToAccountId: null,
+    });
+
+    setIsOcrConfirmModalOpen(false);
+    setTempOcrResult(null);
+    showToast("Transaksi berjaya disimpan!", "success");
   };
 
   return (
@@ -1311,6 +1362,206 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 Batal Imbasan
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* RECEIPT CONFIRMATION MODAL */}
+      {isOcrConfirmModalOpen && tempOcrResult && (
+        <div className="fixed inset-0 bg-black/65 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-950 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 animate-in fade-in-50 zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2.5 bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 rounded-xl">
+                <Sparkles size={22} className="animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-zinc-900 dark:text-zinc-50">
+                  Konfirmasi Hasil Imbasan AI
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 font-semibold">
+                  Periksa dan sunting hasil bacaan AI sebelum disimpan ke transaksi.
+                </p>
+              </div>
+            </div>
+
+            {/* Confidence Warning Banner */}
+            {tempOcrResult.confidence < 90 && (
+              <div className="mb-5 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl flex items-start gap-3">
+                <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
+                <div>
+                  <h4 className="text-xs font-extrabold text-amber-800 dark:text-amber-300">
+                    Perhatian: Tingkat Keyakinan Rendah ({tempOcrResult.confidence}%)
+                  </h4>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5 font-semibold">
+                    Nominal mungkin tidak akurat. Mohon periksa kembali.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleOcrConfirmSubmit} className="space-y-4">
+              {/* Merchant */}
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
+                  Merchant / Toko
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={tempOcrResult.merchant}
+                  onChange={(e) => setTempOcrResult({ ...tempOcrResult, merchant: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-violet-600 outline-none font-semibold"
+                />
+              </div>
+
+              {/* Nominal */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase">
+                    Nominal (Rp)
+                  </label>
+                  <span className="text-[10px] text-zinc-400 font-bold">
+                    Disimpan angka bersih: {tempOcrResult.amount || "0"}
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={tempOcrResult.amount}
+                  onChange={(e) => setTempOcrResult({ ...tempOcrResult, amount: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-violet-600 outline-none font-black text-violet-600 dark:text-violet-400"
+                />
+                {/* Re-formatted preview display */}
+                <p className="text-xs font-extrabold text-zinc-600 dark:text-zinc-300 mt-1.5 flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900/40 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                  <span>Pratinjau Format:</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">{formatRupiah(Number(tempOcrResult.amount || 0))}</span>
+                </p>
+              </div>
+
+              {/* Kategori */}
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
+                  Kategori
+                </label>
+                <select
+                  value={tempOcrResult.categoryId}
+                  onChange={(e) => setTempOcrResult({ ...tempOcrResult, categoryId: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-violet-600 outline-none font-semibold"
+                >
+                  {categories.filter(c => c.type === "expense").map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Tanggal */}
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
+                    Tanggal Transaksi
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={tempOcrResult.date}
+                    onChange={(e) => setTempOcrResult({ ...tempOcrResult, date: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-violet-600 outline-none font-semibold"
+                  />
+                </div>
+
+                {/* Rekening */}
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
+                    Rekening Sumber (Keluar Dari)
+                  </label>
+                  <select
+                    value={tempOcrResult.accountId}
+                    onChange={(e) => setTempOcrResult({ ...tempOcrResult, accountId: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-violet-600 outline-none font-semibold"
+                  >
+                    <option value="" disabled>Pilih Rekening...</option>
+                    {localAccounts.map((a) => (
+                      <option key={a.id} value={a.id}>{a.name} ({formatRupiah(a.balance)})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Keterangan */}
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
+                  Keterangan
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={tempOcrResult.description}
+                  onChange={(e) => setTempOcrResult({ ...tempOcrResult, description: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-violet-600 outline-none font-semibold"
+                />
+              </div>
+
+              {/* Collapsible details for raw OCR text & items */}
+              <div className="border border-zinc-150 dark:border-zinc-800/80 rounded-2xl overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/10">
+                <details className="group">
+                  <summary className="flex items-center justify-between p-3.5 text-xs font-extrabold text-zinc-600 dark:text-zinc-400 cursor-pointer hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30 transition-all select-none">
+                    <span className="flex items-center gap-1.5">
+                      📝 Detail & Hasil OCR Mentah (Tahap 1 & 2)
+                    </span>
+                    <span className="transition-transform duration-200 group-open:rotate-180">
+                      ▼
+                    </span>
+                  </summary>
+                  <div className="p-4 border-t border-zinc-150 dark:border-zinc-800/80 space-y-3">
+                    {tempOcrResult.time && (
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-bold">
+                        Waktu Terdeteksi: <span className="text-zinc-700 dark:text-zinc-300">{tempOcrResult.time}</span>
+                      </p>
+                    )}
+                    {tempOcrResult.items && tempOcrResult.items.length > 0 && (
+                      <div>
+                        <h5 className="text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-1.5">Daftar Barang Terbaca:</h5>
+                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                          {tempOcrResult.items.map((item: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between text-xs bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                              <span className="font-bold text-zinc-700 dark:text-zinc-300">{item.name} x{item.qty || 1}</span>
+                              <span className="font-semibold text-zinc-500">{formatRupiah(item.price || 0)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <h5 className="text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-1.5">Teks OCR Mentah (Tahap 1):</h5>
+                      <pre className="text-[10px] font-mono whitespace-pre-wrap bg-zinc-100 dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 max-h-32 overflow-y-auto">
+                        {tempOcrResult.rawOcrText || "Ketiadaan hasil teks."}
+                      </pre>
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOcrConfirmModalOpen(false);
+                    setTempOcrResult(null);
+                  }}
+                  className="px-4 py-2.5 text-xs font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
+                >
+                  Simpan Transaksi
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

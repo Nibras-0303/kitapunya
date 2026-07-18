@@ -861,20 +861,39 @@ apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Respon
     };
 
     const promptText = `
-      Analisis gambar resit/nota perbelanjaan ini dengan teliti dan ekstrak maklumat transaksi berikut dalam Bahasa Melayu.
-      Sila cari:
-      1. Jumlah keseluruhan (total amount) dalam nilai angka/number sahaja.
-      2. Kategori perbelanjaan yang paling sesuai daripada senarai ini: 'Makanan & Minuman', 'Transportasi', 'Hiburan & Rekreasi', 'Investasi & Tabungan', 'Belanja Bulanan', atau 'Lain-lain'.
-      3. Nama kedai / keterangan ringkas transaksi (merchant / description).
-      4. Tarikh transaksi dalam format ISO (YYYY-MM-DD). Jika tidak dijumpai, gunakan tarikh hari ini.
+      Anda adalah pakar pengecaman resit/nota dengan fokus utama pada kejituan amaun nominal transaksi. Sila lakukan analisis dalam 3 tahap berikut:
 
-      PULANGKAN HASIL DALAM FORMAT JSON SAHAJA yang mematuhi skema berikut tanpa sebarang teks markdown di luar atau di dalam respons:
-      {
-        "totalAmount": number,
-        "categoryName": string,
-        "description": string,
-        "date": string
-      }
+      TAHAP 1: EKSTRAK OCR PENUH (RESOLUSI PENUH)
+      Baca dan ekstrak seluruh teks yang terdapat pada gambar resit ini tanpa melangkau apa-apa teks. Letakkan hasil transkripsi penuh ini dalam medan "rawOcrText".
+
+      TAHAP 2: PARSING MAKLUMAT BERSTRUKTUR
+      Daripada teks OCR di Tahap 1, kenal pasti dan ambil maklumat berikut:
+      - Merchant (Nama kedai/perniagaan)
+      - Tanggal (Tarikh dalam format YYYY-MM-DD, jika tiada sila gunakan tarikh hari ini)
+      - Jam (Waktu dalam format HH:MM jika ada, jika tiada letakkan null)
+      - Daftar barang (Senarai barangan yang dibeli dengan kuantiti dan harga masing-masing jika ada)
+      - Total pembayaran (Amaun keseluruhan)
+
+      TAHAP 3: VALIDASI NOMINAL (TERPENTING)
+      Sila cari angka nominal transaksi selepas kata kunci berikut (tidak sensitif huruf besar/kecil):
+      - TOTAL
+      - TOTAL BELANJA
+      - TOTAL BAYAR
+      - GRAND TOTAL
+      - JUMLAH
+      - TOTAL PEMBAYARAN
+      - AMOUNT
+      - TOTAL CASH
+
+      Peraturan ketat untuk Tahap 3:
+      1. Jika terdapat lebih daripada satu angka, pilih angka yang kedudukannya paling hampir selepas kata "TOTAL" atau variasi kata kunci di atas.
+      2. Jika terdapat pecahan seperti Subtotal, Pajak/Tax, PPN, Diskon/Discount, dan TOTAL, anda WAJIB menggunakan nilai TOTAL akhir sebagai nominal transaksi.
+      3. Nominal ini WAJIB disimpan sebagai nombor/angka murni sahaja TANPA sebarang format (tanpa titik, koma, atau simbol mata wang). Contoh: "Rp126.500" mesti disimpan sebagai 126500.
+      4. Tentukan tahap keyakinan (confidence level) dari 0 hingga 100 peratus untuk ketepatan pembacaan nominal transaksi ini. Sekiranya terdapat sebarang kekaburan, ketiadaan label yang jelas, atau angka yang kurang jelas, berikan nilai di bawah 90%. Jika sangat jelas dan tepat, berikan 95% - 100%.
+
+      Sila pilih juga Kategori perbelanjaan yang paling sesuai daripada senarai ini: 'Makanan & Minuman', 'Transportasi', 'Hiburan & Rekreasi', 'Investasi & Tabungan', 'Belanja Bulanan', atau 'Lain-lain'.
+
+      Kembalikan hasil analisis ini dalam format JSON sahaja mengikut skema yang ditetapkan.
     `;
 
     const response = await ai.models.generateContent({
@@ -885,12 +904,27 @@ apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Respon
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            totalAmount: { type: Type.NUMBER, description: "Jumlah wang keseluruhan transaksi dalam angka" },
+            rawOcrText: { type: Type.STRING, description: "Seluruh hasil pembacaan teks OCR dari gambar (Tahap 1)" },
+            merchant: { type: Type.STRING, description: "Nama kedai atau merchant (Tahap 2)" },
+            date: { type: Type.STRING, description: "Tarikh transaksi dalam format YYYY-MM-DD (Tahap 2)" },
+            time: { type: Type.STRING, description: "Waktu transaksi dalam format HH:MM jika ada, jika tiada gunakan null (Tahap 2)" },
             categoryName: { type: Type.STRING, description: "Nama kategori terpilih daripada senarai yang diberikan" },
-            description: { type: Type.STRING, description: "Keterangan transaksi seperti nama kedai/merchant" },
-            date: { type: Type.STRING, description: "Tarikh transaksi dalam format YYYY-MM-DD" },
+            items: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING, description: "Nama barangan" },
+                  qty: { type: Type.NUMBER, description: "Kuantiti barangan" },
+                  price: { type: Type.NUMBER, description: "Harga seunit atau harga barangan" }
+                }
+              },
+              description: "Daftar barang (Tahap 2)"
+            },
+            totalAmount: { type: Type.NUMBER, description: "Nominal transaksi murni berupa angka tanpa format, dihitung berdasarkan validasi Tahap 3" },
+            confidence: { type: Type.NUMBER, description: "Tahap keyakinan kejituan nominal dalam peratusan 0-100" }
           },
-          required: ["totalAmount", "categoryName", "description", "date"],
+          required: ["rawOcrText", "merchant", "date", "categoryName", "totalAmount", "confidence"],
         },
       },
     });
@@ -902,7 +936,7 @@ apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Respon
 
     const parsedResult = JSON.parse(responseText.trim());
 
-    await dbService.addActivityLog(userId, "AI_SCAN_RECEIPT", `Berjaya menganalisis resit via Gemini AI: ${parsedResult.description}`);
+    await dbService.addActivityLog(userId, "AI_SCAN_RECEIPT", `Berjaya menganalisis resit via Gemini AI: ${parsedResult.merchant || parsedResult.categoryName} dengan nominal ${parsedResult.totalAmount} (Confidence: ${parsedResult.confidence}%)`);
 
     res.json({
       success: true,

@@ -316,8 +316,28 @@ export const api = {
   },
 
   // --- AI SCAN ---
-  async scanReceipt(base64Image: string, mimeType?: string): Promise<{ totalAmount: number; categoryName: string; description: string; date: string }> {
-    const res = await request<{ result: { totalAmount: number; categoryName: string; description: string; date: string } }>("/scan-receipt", {
+  async scanReceipt(base64Image: string, mimeType?: string): Promise<{
+    rawOcrText: string;
+    merchant: string;
+    date: string;
+    time: string | null;
+    categoryName: string;
+    items?: Array<{ name: string; qty: number; price: number }>;
+    totalAmount: number;
+    confidence: number;
+  }> {
+    const res = await request<{
+      result: {
+        rawOcrText: string;
+        merchant: string;
+        date: string;
+        time: string | null;
+        categoryName: string;
+        items?: Array<{ name: string; qty: number; price: number }>;
+        totalAmount: number;
+        confidence: number;
+      };
+    }>("/scan-receipt", {
       method: "POST",
       body: JSON.stringify({ base64Image, mimeType }),
     });
