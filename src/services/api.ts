@@ -178,7 +178,7 @@ export const api = {
     return res?.transactions || [];
   },
 
-  async createTransaction(tx: Omit<Transaction, "id" | "userId" | "createdAt">): Promise<Transaction> {
+  async createTransaction(tx: Omit<Transaction, "id" | "userId" | "createdAt"> & { transferToAccountId?: string | null; paidBy?: string | null; reimburse?: boolean | null }): Promise<Transaction> {
     const res = await request<{ transaction: Transaction }>("/transactions", {
       method: "POST",
       body: JSON.stringify(tx),
@@ -188,6 +188,15 @@ export const api = {
 
   async deleteTransaction(id: string): Promise<void> {
     await request(`/transactions/${id}`, { method: "DELETE" });
+  },
+
+  async getPartnerReport(): Promise<{
+    nibras: { balance: number; income: number; expense: number };
+    zenita: { balance: number; income: number; expense: number };
+    bersama: { tabunganBalance: number; operasionalBalance: number; transferIn: number; expense: number };
+  }> {
+    const res = await request<{ report: any }>("/reports/partner");
+    return res.report;
   },
 
   // --- BUDGETS ---

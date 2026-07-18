@@ -301,7 +301,7 @@ apiRouter.get("/transactions", requireProfile, async (req: Request, res: Respons
 apiRouter.post("/transactions", requireProfile, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { accountId, toAccountId, categoryId, amount, type, description, date, receiptImageUrl } = req.body;
+    const { accountId, toAccountId, categoryId, amount, type, description, date, receiptImageUrl, transferToAccountId, paidBy, reimburse } = req.body;
 
     if (!accountId || !amount || !type) {
       return res.status(400).json({ error: "Akaun, jumlah, dan jenis transaksi diperlukan." });
@@ -317,6 +317,9 @@ apiRouter.post("/transactions", requireProfile, async (req: Request, res: Respon
       description,
       date: date ? new Date(date) : undefined,
       receiptImageUrl,
+      transferToAccountId,
+      paidBy,
+      reimburse: reimburse === true || reimburse === "true",
     });
 
     await dbService.addActivityLog(userId, "ADD_TRANSACTION", `Menambah transaksi ${type}: RM ${amount}`);
@@ -897,6 +900,17 @@ apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Respon
   } catch (err: any) {
     console.error("OCR Scan API Error:", err);
     res.status(500).json({ error: "Gagal menganalisis resit: " + (err.message || err) });
+  }
+});
+
+// --- PARTNER REPORT ENDPOINT ---
+apiRouter.get("/reports/partner", requireProfile, async (req: Request, res: Response) => {
+  try {
+    const report = await dbService.getPartnerReport();
+    res.json({ report });
+  } catch (err: any) {
+    console.error("Partner report API error:", err);
+    res.status(500).json({ error: "Gagal memproses laporan kewangan pasangan: " + err.message });
   }
 });
 

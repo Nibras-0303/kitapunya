@@ -38,17 +38,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "accounts", label: "Akun Keuangan", icon: CreditCard },
     { id: "transactions", label: "Transaksi", icon: ArrowLeftRight },
-    { id: "categories", label: "Kategori", icon: Tag },
-    { id: "budgets", label: "Budget Bulanan", icon: PieChart },
     { id: "savings", label: "Target Tabungan", icon: Target },
-    { id: "investments", label: "Investasi", icon: TrendingUp },
-    { id: "gallery", label: "Galeri Nota", icon: ImageIcon },
+    { id: "scan", label: "Scan Nota", icon: ImageIcon },
   ];
 
   // Admin section menu item
-  const isAdmin = session?.role === "admin";
+  const isAdmin = false;
 
   const handleNavClick = (viewId: string) => {
     setView(viewId);

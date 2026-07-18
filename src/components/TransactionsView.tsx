@@ -38,6 +38,7 @@ interface TransactionsViewProps {
     description: string;
     date: string;
     receiptImageUrl?: string | null;
+    transferToAccountId?: string | null;
   }) => Promise<void>;
   onDeleteTransaction: (id: string) => Promise<void>;
   showToast: (msg: string, type: "success" | "error" | "info") => void;
@@ -57,7 +58,42 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 }) => {
   const activeUserId = typeof window !== "undefined" ? localStorage.getItem("kitapunya_active_userid") : null;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // Local Accounts States for Tambah Transaksi
+  const [localAccounts, setLocalAccounts] = useState<Account[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [errorAccounts, setErrorAccounts] = useState<string | null>(null);
+
+  const loadAccounts = async () => {
+    setLoadingAccounts(true);
+    setErrorAccounts(null);
+    try {
+      const response = await api.getAccounts();
+      setLocalAccounts(response);
+      if (response && response.length > 0) {
+        setAccountId(response[0].id);
+        if (response.length > 1) {
+          setToAccountId(response[1].id);
+        } else {
+          setToAccountId("");
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load accounts:", err);
+      setErrorAccounts("Tidak dapat memuat rekening.");
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (isAddModalOpen) {
+      loadAccounts();
+    }
+  }, [isAddModalOpen]);
   const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
+  const [isOcrDestModalOpen, setIsOcrDestModalOpen] = useState(false);
+  const [tempOcrResult, setTempOcrResult] = useState<any>(null);
 
   // Filter States
   const [search, setSearch] = useState("");
@@ -76,6 +112,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
   const [receiptUrl, setReceiptUrl] = useState("");
+  const [transferToAccountId, setTransferToAccountId] = useState("pribadi");
+  const [paidBy, setPaidBy] = useState("operasional");
+  const [reimburse, setReimburse] = useState(false);
 
   // OCR Form / Loading states
   const [isOcrLoading, setIsOcrLoading] = useState(false);
@@ -144,18 +183,15 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   }, [transactions, search, filterType, filterAccount, filterCategory, filterStartDate, filterEndDate]);
 
   const handleOpenAdd = () => {
-    if (accounts.length === 0) {
-      alert("Sila daftarkan sekurang-kurangnya satu Akaun Keuangan terlebih dahulu.");
-      return;
-    }
-    setAccountId(accounts[0].id);
-    setToAccountId(accounts[1]?.id || "");
     const expenseCats = categories.filter(c => c.type === "expense");
     setCategoryId(expenseCats[0]?.id || categories[0]?.id || "");
     setAmount("");
     setDescription("");
     setDate(new Date().toISOString().substring(0, 10));
     setReceiptUrl("");
+    setTransferToAccountId("pribadi");
+    setPaidBy("operasional");
+    setReimburse(false);
     setIsAddModalOpen(true);
   };
 
@@ -186,6 +222,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       description: description || (txType === "transfer" ? "Pindahan Wang" : "Transaksi baru"),
       date,
       receiptImageUrl: receiptUrl || null,
+      transferToAccountId: (txType === "expense" && categoryId === "c0000000-0000-0000-0000-000000000007") ? transferToAccountId : null,
+      paidBy: activeUserId === "33333333-3333-3333-3333-333333333333" && txType === "expense" ? paidBy : null,
+      reimburse: activeUserId === "33333333-3333-3333-3333-333333333333" && txType === "expense" && paidBy !== "operasional" ? reimburse : null,
     });
 
     setIsAddModalOpen(false);
@@ -373,34 +412,51 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       }
 
       // Populate transaction form with OCR scan results
-      setTxType("expense");
-      setAmount(String(result.totalAmount));
-      setDescription(`[AI Scan] ${result.description}`);
-      setDate(result.date || new Date().toISOString().substring(0, 10));
-
-      // Match category name
+      let finalCategoryId = "";
       const matchedCat = categories.find(
         (c) => c.name.toLowerCase().includes(result.categoryName.toLowerCase()) ||
                result.categoryName.toLowerCase().includes(c.name.toLowerCase())
       );
       if (matchedCat) {
-        setCategoryId(matchedCat.id);
-      }
-
-      if (publicImageUrl) {
-        setReceiptUrl(publicImageUrl);
+        finalCategoryId = matchedCat.id;
       } else {
-        setReceiptUrl(customBase64 || ocrSelectedImage || "");
+        finalCategoryId = categories.find(c => c.type === "expense")?.id || "";
       }
 
-      showToast("Analisis Pintar AI Selesai! Borang telah diisi secara automatik.", "success");
+      const activeImg = publicImageUrl || customBase64 || ocrSelectedImage || "";
+
+      // Store in tempOcrResult for the destination chooser popup
+      setTempOcrResult({
+        amount: String(result.totalAmount),
+        description: `[AI Scan] ${result.description}`,
+        date: result.date || new Date().toISOString().substring(0, 10),
+        categoryId: finalCategoryId,
+        receiptImageUrl: activeImg,
+      });
+
+      showToast("Analisis Pintar AI Selesai! Sila pilih akaun destinasi untuk transaksi ini.", "success");
       handleCloseOcrModal();
-      setIsAddModalOpen(true); // Open transaction form so they can review and save
+      setIsOcrDestModalOpen(true); // Show the destination selector modal!
     } catch (err: any) {
       showToast("Ralat mengimbas resit: " + err.message, "error");
     } finally {
       setIsOcrLoading(false);
     }
+  };
+
+  const handleSelectOcrDestination = (selectedAccId: string) => {
+    if (!tempOcrResult) return;
+    
+    setTxType("expense");
+    setAccountId(selectedAccId);
+    setAmount(tempOcrResult.amount);
+    setDescription(tempOcrResult.description);
+    setDate(tempOcrResult.date);
+    setCategoryId(tempOcrResult.categoryId);
+    setReceiptUrl(tempOcrResult.receiptImageUrl);
+    
+    setIsOcrDestModalOpen(false);
+    setIsAddModalOpen(true); // Open the review and save form!
   };
 
   return (
@@ -702,17 +758,37 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 {/* Account From */}
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                    {txType === "transfer" ? "Akaun Sumber" : "Gunakan Akaun"}
+                    {txType === "transfer" ? "Rekening Sumber" : txType === "expense" ? "Rekening Sumber (Keluar Dari)" : "Rekening Penerima (Masuk Ke)"}
                   </label>
-                  <select
-                    value={accountId}
-                    onChange={(e) => setAccountId(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
-                  >
-                    {accounts.map((a) => (
-                      <option key={a.id} value={a.id}>{a.name} ({formatRupiah(a.balance)})</option>
-                    ))}
-                  </select>
+                  {loadingAccounts ? (
+                    <div className="text-xs font-semibold text-zinc-500 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl px-4 border border-zinc-200 dark:border-zinc-800 animate-pulse flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" />
+                      Memuat daftar rekening...
+                    </div>
+                  ) : errorAccounts ? (
+                    <div className="flex flex-col gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl">
+                      <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                        {errorAccounts}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={loadAccounts}
+                        className="self-start px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-[10px] rounded-lg transition-all"
+                      >
+                        Coba Lagi
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      value={accountId}
+                      onChange={(e) => setAccountId(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
+                    >
+                      {localAccounts.map((a) => (
+                        <option key={a.id} value={a.id}>{a.name} ({formatRupiah(a.balance)})</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 {/* Account To (ONLY for transfer) */}
@@ -721,31 +797,100 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
                       Akaun Destinasi
                     </label>
-                    <select
-                      value={toAccountId}
-                      onChange={(e) => setToAccountId(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
-                    >
-                      {accounts.map((a) => (
-                        <option key={a.id} value={a.id}>{a.name} ({formatRupiah(a.balance)})</option>
-                      ))}
-                    </select>
+                    {loadingAccounts ? (
+                      <div className="text-xs font-semibold text-zinc-500 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl px-4 border border-zinc-200 dark:border-zinc-800 animate-pulse flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" />
+                        Memuat daftar rekening...
+                      </div>
+                    ) : errorAccounts ? (
+                      <div className="flex flex-col gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl">
+                        <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                          {errorAccounts}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={loadAccounts}
+                          className="self-start px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-[10px] rounded-lg transition-all"
+                        >
+                          Coba Lagi
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={toAccountId}
+                        onChange={(e) => setToAccountId(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
+                      >
+                        {localAccounts.map((a) => (
+                          <option key={a.id} value={a.id}>{a.name} ({formatRupiah(a.balance)})</option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                 ) : (
                   /* Category (For Income/Expense only) */
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                      Kategori
-                    </label>
-                    <select
-                      value={categoryId}
-                      onChange={(e) => setCategoryId(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
-                    >
-                      {categories.filter(c => c.type === txType).map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
+                        Kategori
+                      </label>
+                      <select
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
+                      >
+                        {categories.filter(c => c.type === txType).map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Special options for Tabungan category */}
+                    {txType === "expense" && categoryId === "c0000000-0000-0000-0000-000000000007" && (
+                      <div className="p-4 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/60 rounded-2xl space-y-3">
+                        <span className="block text-xs font-extrabold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                          Simpan Sebagai / Transfer ke:
+                        </span>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-3 text-xs text-zinc-700 dark:text-zinc-300 font-semibold cursor-pointer">
+                            <input
+                              type="radio"
+                              name="transferTo"
+                              value="a0000000-0000-0000-0000-000000000301"
+                              checked={transferToAccountId === "a0000000-0000-0000-0000-000000000301"}
+                              onChange={(e) => setTransferToAccountId(e.target.value)}
+                              className="text-purple-600 focus:ring-purple-500 h-4 w-4 border-zinc-300 dark:border-zinc-700"
+                            />
+                            <span>Tabungan Bersama (SeaBank)</span>
+                          </label>
+                          <label className="flex items-center gap-3 text-xs text-zinc-700 dark:text-zinc-300 font-semibold cursor-pointer">
+                            <input
+                              type="radio"
+                              name="transferTo"
+                              value="a0000000-0000-0000-0000-000000000302"
+                              checked={transferToAccountId === "a0000000-0000-0000-0000-000000000302"}
+                              onChange={(e) => setTransferToAccountId(e.target.value)}
+                              className="text-purple-600 focus:ring-purple-500 h-4 w-4 border-zinc-300 dark:border-zinc-700"
+                            />
+                            <span>Rekening Jajan Bersama (SeaBank)</span>
+                          </label>
+                          <label className="flex items-center gap-3 text-xs text-zinc-700 dark:text-zinc-300 font-semibold cursor-pointer">
+                            <input
+                              type="radio"
+                              name="transferTo"
+                              value="pribadi"
+                              checked={transferToAccountId === "pribadi"}
+                              onChange={(e) => setTransferToAccountId(e.target.value)}
+                              className="text-purple-600 focus:ring-purple-500 h-4 w-4 border-zinc-300 dark:border-zinc-700"
+                            />
+                            <span>Tabungan Pribadi (Rekening Sendiri)</span>
+                          </label>
+                        </div>
+                        <p className="text-[10px] text-purple-600/80 dark:text-purple-400/80 leading-relaxed font-semibold">
+                          * Memilih rekening bersama otomatis mencatat transfer keluar di profil Anda dan transfer masuk di profil Bersama.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -796,6 +941,50 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
                 />
               </div>
+
+              {/* Joint Reimbursement Block (Only for Uang Bersama profile expenses) */}
+              {activeUserId === "33333333-3333-3333-3333-333333333333" && txType === "expense" && (
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-800 rounded-2xl space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase mb-1.5">
+                      Dibayar oleh
+                    </label>
+                    <select
+                      value={paidBy}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPaidBy(val);
+                        if (val === "operasional") {
+                          setReimburse(false);
+                        }
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-850/80 bg-transparent text-emerald-900 dark:text-emerald-100 text-sm focus:border-emerald-600 outline-none font-bold"
+                    >
+                      <option value="operasional">Saldo Operasional Bersama</option>
+                      <option value="nibras">Nibras (Talangan Peribadi)</option>
+                      <option value="zenita">Zenita (Talangan Peribadi)</option>
+                    </select>
+                  </div>
+
+                  {paidBy !== "operasional" && (
+                    <div className="flex items-center gap-2.5 pt-1.5">
+                      <input
+                        type="checkbox"
+                        id="tx-reimburse-chk"
+                        checked={reimburse}
+                        onChange={(e) => setReimburse(e.target.checked)}
+                        className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 rounded border-zinc-350"
+                      />
+                      <label htmlFor="tx-reimburse-chk" className="text-xs font-bold text-emerald-850 dark:text-emerald-200 cursor-pointer select-none">
+                        Ganti menggunakan saldo Operasional Bersama?
+                      </label>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-emerald-700/80 dark:text-emerald-400 font-semibold leading-relaxed">
+                    * Memilih talangan peribadi dan pengembalian akan mengurangkan baki Operasional Bersama dan menambah baki saku peribadi pembayar secara automatik.
+                  </p>
+                </div>
+              )}
 
               {/* Receipt URL (Optional) */}
               <div>
@@ -970,15 +1159,11 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Two Large Choices Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Option: Ambil Foto */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCameraActive(true);
-                      startCamera();
-                    }}
+                {/* Three Choices Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Option: Ambil Foto (Kamera Peranti) - Bulletproof Label */}
+                  <label
+                    htmlFor="system-camera-file-input"
                     className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/10 dark:hover:bg-violet-950/5 transition-all text-center group cursor-pointer h-44 w-full"
                   >
                     <div className="p-4 bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
@@ -987,18 +1172,14 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     <span className="font-extrabold text-sm text-zinc-800 dark:text-zinc-100">
                       📷 Ambil Foto (Kamera)
                     </span>
-                    <span className="text-[10px] text-zinc-500 mt-1 max-w-[180px]">
-                      Ambil foto resit secara langsung dengan kamera peranti anda
+                    <span className="text-[10px] text-zinc-500 mt-1 max-w-[150px]">
+                      Ambil foto resit terus menggunakan kamera sistem peranti anda (Disyorkan)
                     </span>
-                  </button>
+                  </label>
 
-                  {/* Option: Pilih dari Galeri */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log("GALLERY SELECT CLICKED");
-                      galleryInputRef.current?.click();
-                    }}
+                  {/* Option: Pilih dari Galeri - Bulletproof Label */}
+                  <label
+                    htmlFor="gallery-file-input"
                     className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/10 dark:hover:bg-violet-950/5 transition-all text-center group cursor-pointer h-44 w-full"
                   >
                     <div className="p-4 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
@@ -1007,8 +1188,28 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     <span className="font-extrabold text-sm text-zinc-800 dark:text-zinc-100">
                       🖼️ Pilih dari Galeri
                     </span>
-                    <span className="text-[10px] text-zinc-500 mt-1 max-w-[180px]">
-                      Pilih gambar JPG, JPEG, PNG, atau WEBP sedia ada dari peranti anda
+                    <span className="text-[10px] text-zinc-500 mt-1 max-w-[150px]">
+                      Pilih fail imej resit sedia ada dari galeri atau peranti anda
+                    </span>
+                  </label>
+
+                  {/* Option: Imbas Secara Langsung (Webcam) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCameraActive(true);
+                      startCamera();
+                    }}
+                    className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 rounded-3xl bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/10 dark:hover:bg-violet-950/5 transition-all text-center group cursor-pointer h-44 w-full"
+                  >
+                    <div className="p-4 bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+                      <Video size={24} />
+                    </div>
+                    <span className="font-extrabold text-sm text-zinc-800 dark:text-zinc-100">
+                      📹 Kamera Web Langsung
+                    </span>
+                    <span className="text-[10px] text-zinc-500 mt-1 max-w-[150px]">
+                      Gunakan suapan video kamera langsung di dalam pelayar web anda
                     </span>
                   </button>
                 </div>
@@ -1024,6 +1225,92 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* OCR Destination Account Selection Modal */}
+      {isOcrDestModalOpen && tempOcrResult && (
+        <div className="fixed inset-0 bg-black/65 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-950 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-in fade-in-50 zoom-in-95 duration-200">
+            <h3 className="text-lg font-extrabold text-zinc-900 dark:text-zinc-50 mb-2">
+              Pilih Akaun untuk Transaksi Imbasan AI
+            </h3>
+            <p className="text-xs text-zinc-500 mb-6 font-semibold">
+              Sila pilih akaun di mana transaksi bernilai <span className="text-violet-600 dark:text-violet-400 font-bold">{formatRupiah(Number(tempOcrResult.amount))}</span> ini akan direkodkan.
+            </p>
+
+            <div className="space-y-3 mb-6">
+              {/* Nibras Personal Account */}
+              <button
+                type="button"
+                onClick={() => handleSelectOcrDestination("a0000000-0000-0000-0000-000000000101")}
+                className="w-full flex items-center justify-between p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/10 dark:hover:bg-violet-950/10 text-left transition-all group cursor-pointer"
+              >
+                <div>
+                  <span className="block font-bold text-sm text-zinc-800 dark:text-zinc-100 group-hover:text-violet-600 dark:group-hover:text-violet-400">
+                    Mandiri (Pribadi Nibras)
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-semibold">
+                    Simpan perbelanjaan ke rekening Mandiri Nibras
+                  </span>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                  N
+                </div>
+              </button>
+
+              {/* Zenita Personal Account */}
+              <button
+                type="button"
+                onClick={() => handleSelectOcrDestination("a0000000-0000-0000-0000-000000000201")}
+                className="w-full flex items-center justify-between p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/10 dark:hover:bg-violet-950/10 text-left transition-all group cursor-pointer"
+              >
+                <div>
+                  <span className="block font-bold text-sm text-zinc-800 dark:text-zinc-100 group-hover:text-violet-600 dark:group-hover:text-violet-400">
+                    BCA (Pribadi Zenita)
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-semibold">
+                    Simpan perbelanjaan ke rekening BCA Zenita
+                  </span>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 flex items-center justify-center font-bold text-xs">
+                  Z
+                </div>
+              </button>
+
+              {/* SeaBank Jajan Bersama */}
+              <button
+                type="button"
+                onClick={() => handleSelectOcrDestination("a0000000-0000-0000-0000-000000000302")}
+                className="w-full flex items-center justify-between p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-violet-500 dark:hover:border-violet-500 bg-zinc-50 hover:bg-violet-50/25 dark:bg-zinc-900/10 dark:hover:bg-violet-950/10 text-left transition-all group cursor-pointer"
+              >
+                <div>
+                  <span className="block font-bold text-sm text-zinc-800 dark:text-zinc-100 group-hover:text-violet-600 dark:group-hover:text-violet-400">
+                    SeaBank Jajan Bersama
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-semibold">
+                    Simpan perbelanjaan ke rekening jajan bulanan bersama
+                  </span>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+                  S
+                </div>
+              </button>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOcrDestModalOpen(false);
+                  setTempOcrResult(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-all cursor-pointer"
+              >
+                Batal Imbasan
+              </button>
+            </div>
           </div>
         </div>
       )}

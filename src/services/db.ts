@@ -137,43 +137,30 @@ class MemoryDatabase {
       createdAt: new Date(),
     });
 
-    // Default Categories: 21 categories (income & expense)
+    // Default Categories: Simplified list of categories (income & expense)
     const defaultCats = [
       // Pemasukan
       { id: "c0000000-0000-0000-0000-000000000001", userId: null, name: "Gaji", type: "income" as const, icon: "Briefcase", color: "#10B981" },
       { id: "c0000000-0000-0000-0000-000000000002", userId: null, name: "Bonus", type: "income" as const, icon: "TrendingUp", color: "#059669" },
-      { id: "c0000000-0000-0000-0000-000000000003", userId: null, name: "Hadiah", type: "income" as const, icon: "Gift", color: "#34D399" },
-      { id: "c0000000-0000-0000-0000-000000000004", userId: null, name: "Investasi", type: "income" as const, icon: "Percent", color: "#06B6D4" },
+      { id: "c0000000-0000-0000-0000-000000000003", userId: null, name: "Lain-lain", type: "income" as const, icon: "Tag", color: "#6B7280" },
       // Pengeluaran
-      { id: "c0000000-0000-0000-0000-000000000005", userId: null, name: "Makanan", type: "expense" as const, icon: "Utensils", color: "#EF4444" },
-      { id: "c0000000-0000-0000-0000-000000000006", userId: null, name: "Minuman", type: "expense" as const, icon: "GlassWater", color: "#F87171" },
-      { id: "c0000000-0000-0000-0000-000000000007", userId: null, name: "Belanja", type: "expense" as const, icon: "ShoppingBag", color: "#EC4899" },
-      { id: "c0000000-0000-0000-0000-000000000008", userId: null, name: "Transportasi", type: "expense" as const, icon: "Car", color: "#3B82F6" },
-      { id: "c0000000-0000-0000-0000-000000000009", userId: null, name: "Tagihan", type: "expense" as const, icon: "Receipt", color: "#F59E0B" },
-      { id: "c0000000-0000-0000-0000-000000000010", userId: null, name: "Hiburan", type: "expense" as const, icon: "Gamepad2", color: "#F43F5E" },
-      { id: "c0000000-0000-0000-0000-000000000011", userId: null, name: "Kesehatan", type: "expense" as const, icon: "Heart", color: "#14B8A6" },
-      { id: "c0000000-0000-0000-0000-000000000012", userId: null, name: "Pendidikan", type: "expense" as const, icon: "GraduationCap", color: "#6366F1" },
-      { id: "c0000000-0000-0000-0000-000000000013", userId: null, name: "Rumah Tangga", type: "expense" as const, icon: "Home", color: "#8B5CF6" },
-      { id: "c0000000-0000-0000-0000-000000000014", userId: null, name: "Bensin", type: "expense" as const, icon: "Fuel", color: "#D97706" },
-      { id: "c0000000-0000-0000-0000-000000000015", userId: null, name: "Parkir", type: "expense" as const, icon: "MapPin", color: "#4B5563" },
-      { id: "c0000000-0000-0000-0000-000000000016", userId: null, name: "Internet", type: "expense" as const, icon: "Globe", color: "#2563EB" },
-      { id: "c0000000-0000-0000-0000-000000000017", userId: null, name: "Listrik", type: "expense" as const, icon: "Lightbulb", color: "#EAB308" },
-      { id: "c0000000-0000-0000-0000-000000000018", userId: null, name: "Air", type: "expense" as const, icon: "Droplet", color: "#0EA5E9" },
-      { id: "c0000000-0000-0000-0000-000000000019", userId: null, name: "Pulsa", type: "expense" as const, icon: "Phone", color: "#D946EF" },
-      { id: "c0000000-0000-0000-0000-000000000020", userId: null, name: "Sedekah", type: "expense" as const, icon: "HeartHandshake", color: "#10B981" },
-      { id: "c0000000-0000-0000-0000-000000000021", userId: null, name: "Lainnya", type: "expense" as const, icon: "Tag", color: "#6B7280" },
+      { id: "c0000000-0000-0000-0000-000000000004", userId: null, name: "Jajan", type: "expense" as const, icon: "ShoppingBag", color: "#EC4899" },
+      { id: "c0000000-0000-0000-0000-000000000005", userId: null, name: "Makan", type: "expense" as const, icon: "Utensils", color: "#EF4444" },
+      { id: "c0000000-0000-0000-0000-000000000006", userId: null, name: "Kebutuhan", type: "expense" as const, icon: "Home", color: "#3B82F6" },
+      { id: "c0000000-0000-0000-0000-000000000007", userId: null, name: "Tabungan", type: "expense" as const, icon: "Target", color: "#8B5CF6" },
+      { id: "c0000000-0000-0000-0000-000000000008", userId: null, name: "Lain-lain", type: "expense" as const, icon: "Tag", color: "#6B7280" },
     ];
     this.categories.push(...defaultCats.map(c => ({ ...c, createdAt: new Date() })));
 
-    // Default Accounts: Rekening Pribadi Nibras, Rekening Pribadi Zenita, Tabungan Bersama, Jajan Berdua (starting balance 0)
+    // Default Accounts: Rekening Pribadi Nibras, Rekening Pribadi Zenita, SeaBank Tabungan, SeaBank Jajan Bulanan
     const defaultAccs = [
       // Nibras
-      { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Rekening Pribadi", type: "personal", balance: 0, color: "#3B82F6", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 1500000, color: "#3B82F6", createdAt: new Date() },
       // Zenita
-      { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "Rekening Pribadi", type: "personal", balance: 0, color: "#EC4899", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BCA", type: "personal", balance: 1500000, color: "#EC4899", createdAt: new Date() },
       // Uang Bersama
-      { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "Tabungan Bersama", type: "shared_savings", balance: 0, color: "#10B981", createdAt: new Date() },
-      { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "Jajan Berdua", type: "shared_spending", balance: 0, color: "#F59E0B", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan", type: "shared_savings", balance: 5000000, color: "#10B981", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Jajan Bulanan", type: "shared_spending", balance: 1250000, color: "#F59E0B", createdAt: new Date() },
     ];
     this.accounts.push(...defaultAccs);
 
@@ -383,12 +370,12 @@ export async function seedDb(db: any) {
     } else {
       await db.insert(schema.accounts).values([
         // Nibras
-        { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Rekening Pribadi", type: "personal", balance: 0, color: "#3B82F6" },
+        { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 1500000, color: "#3B82F6" },
         // Zenita
-        { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "Rekening Pribadi", type: "personal", balance: 0, color: "#EC4899" },
+        { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BCA", type: "personal", balance: 1500000, color: "#EC4899" },
         // Uang Bersama
-        { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "Tabungan Bersama", type: "shared_savings", balance: 0, color: "#10B981" },
-        { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "Jajan Berdua", type: "shared_spending", balance: 0, color: "#F59E0B" },
+        { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan", type: "shared_savings", balance: 5000000, color: "#10B981" },
+        { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Jajan Bulanan", type: "shared_spending", balance: 1250000, color: "#F59E0B" },
       ]).onConflictDoNothing();
       console.log("✓ Rekening dibuat");
     }
@@ -402,26 +389,13 @@ export async function seedDb(db: any) {
         // Pemasukan
         { id: "c0000000-0000-0000-0000-000000000001", name: "Gaji", type: "income", icon: "Briefcase", color: "#10B981" },
         { id: "c0000000-0000-0000-0000-000000000002", name: "Bonus", type: "income", icon: "TrendingUp", color: "#059669" },
-        { id: "c0000000-0000-0000-0000-000000000003", name: "Hadiah", type: "income", icon: "Gift", color: "#34D399" },
-        { id: "c0000000-0000-0000-0000-000000000004", name: "Investasi", type: "income", icon: "Percent", color: "#06B6D4" },
+        { id: "c0000000-0000-0000-0000-000000000003", name: "Lain-lain", type: "income", icon: "Tag", color: "#6B7280" },
         // Pengeluaran
-        { id: "c0000000-0000-0000-0000-000000000005", name: "Makanan", type: "expense", icon: "Utensils", color: "#EF4444" },
-        { id: "c0000000-0000-0000-0000-000000000006", name: "Minuman", type: "expense", icon: "GlassWater", color: "#F87171" },
-        { id: "c0000000-0000-0000-0000-000000000007", name: "Belanja", type: "expense", icon: "ShoppingBag", color: "#EC4899" },
-        { id: "c0000000-0000-0000-0000-000000000008", name: "Transportasi", type: "expense", icon: "Car", color: "#3B82F6" },
-        { id: "c0000000-0000-0000-0000-000000000009", name: "Tagihan", type: "expense", icon: "Receipt", color: "#F59E0B" },
-        { id: "c0000000-0000-0000-0000-000000000010", name: "Hiburan", type: "expense", icon: "Gamepad2", color: "#F43F5E" },
-        { id: "c0000000-0000-0000-0000-000000000011", name: "Kesehatan", type: "expense", icon: "Heart", color: "#14B8A6" },
-        { id: "c0000000-0000-0000-0000-000000000012", name: "Pendidikan", type: "expense", icon: "GraduationCap", color: "#6366F1" },
-        { id: "c0000000-0000-0000-0000-000000000013", name: "Rumah Tangga", type: "expense", icon: "Home", color: "#8B5CF6" },
-        { id: "c0000000-0000-0000-0000-000000000014", name: "Bensin", type: "expense", icon: "Fuel", color: "#D97706" },
-        { id: "c0000000-0000-0000-0000-000000000015", name: "Parkir", type: "expense", icon: "MapPin", color: "#4B5563" },
-        { id: "c0000000-0000-0000-0000-000000000016", name: "Internet", type: "expense", icon: "Globe", color: "#2563EB" },
-        { id: "c0000000-0000-0000-0000-000000000017", name: "Listrik", type: "expense", icon: "Lightbulb", color: "#EAB308" },
-        { id: "c0000000-0000-0000-0000-000000000018", name: "Air", type: "expense", icon: "Droplet", color: "#0EA5E9" },
-        { id: "c0000000-0000-0000-0000-000000000019", name: "Pulsa", type: "expense", icon: "Phone", color: "#D946EF" },
-        { id: "c0000000-0000-0000-0000-000000000020", name: "Sedekah", type: "expense", icon: "HeartHandshake", color: "#10B981" },
-        { id: "c0000000-0000-0000-0000-000000000021", name: "Lainnya", type: "expense", icon: "Tag", color: "#6B7280" },
+        { id: "c0000000-0000-0000-0000-000000000004", name: "Jajan", type: "expense", icon: "ShoppingBag", color: "#EC4899" },
+        { id: "c0000000-0000-0000-0000-000000000005", name: "Makan", type: "expense", icon: "Utensils", color: "#EF4444" },
+        { id: "c0000000-0000-0000-0000-000000000006", name: "Kebutuhan", type: "expense", icon: "Home", color: "#3B82F6" },
+        { id: "c0000000-0000-0000-0000-000000000007", name: "Tabungan", type: "expense", icon: "Target", color: "#8B5CF6" },
+        { id: "c0000000-0000-0000-0000-000000000008", name: "Lain-lain", type: "expense", icon: "Tag", color: "#6B7280" },
       ];
       for (const cat of defaultCats) {
         await db.insert(schema.categories).values({
@@ -535,14 +509,11 @@ function getDb() {
 }
 
 function getTargetUserIds(userId: string): string[] {
-  if (userId === "33333333-3333-3333-3333-333333333333") {
-    return ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222", "33333333-3333-3333-3333-333333333333"];
-  }
-  if (userId === "11111111-1111-1111-1111-111111111111") {
-    return ["11111111-1111-1111-1111-111111111111", "33333333-3333-3333-3333-333333333333"];
-  }
-  if (userId === "22222222-2222-2222-2222-222222222222") {
-    return ["22222222-2222-2222-2222-222222222222", "33333333-3333-3333-3333-333333333333"];
+  const nibrasId = "11111111-1111-1111-1111-111111111111";
+  const zenitaId = "22222222-2222-2222-2222-222222222222";
+  const bersamaId = "33333333-3333-3333-3333-333333333333";
+  if (userId === nibrasId || userId === zenitaId || userId === bersamaId) {
+    return [nibrasId, zenitaId, bersamaId];
   }
   return [userId];
 }
@@ -630,11 +601,198 @@ export const dbService = {
   // --- FINANCIAL ACCOUNTS ---
   async getAccounts(userId: string): Promise<Account[]> {
     const db = getDb();
-    const targetIds = getTargetUserIds(userId);
+    const nibrasId = "11111111-1111-1111-1111-111111111111";
+    const zenitaId = "22222222-2222-2222-2222-222222222222";
+    const bersamaId = "33333333-3333-3333-3333-333333333333";
+
     if (db) {
-      return await db.select().from(schema.accounts).where(inArray(schema.accounts.userId, targetIds));
+      // Check if accounts exist for the active user (profileAktif)
+      const currentProfileAccounts = await db.select().from(schema.accounts).where(eq(schema.accounts.userId, userId));
+      if (currentProfileAccounts.length === 0) {
+        console.log(`No database accounts found for profile ${userId}, creating defaults...`);
+        if (userId === nibrasId) {
+          await db.insert(schema.accounts).values({
+            id: crypto.randomUUID(),
+            userId: nibrasId,
+            name: "Rekening Pribadi",
+            type: "personal",
+            balance: 1500000,
+            color: "#3B82F6"
+          });
+        } else if (userId === zenitaId) {
+          await db.insert(schema.accounts).values({
+            id: crypto.randomUUID(),
+            userId: zenitaId,
+            name: "Rekening Pribadi",
+            type: "personal",
+            balance: 1500000,
+            color: "#EC4899"
+          });
+        } else if (userId === bersamaId) {
+          await db.insert(schema.accounts).values([
+            {
+              id: crypto.randomUUID(),
+              userId: bersamaId,
+              name: "SeaBank Tabungan Bersama",
+              type: "shared_savings",
+              balance: 5000000,
+              color: "#10B981"
+            },
+            {
+              id: crypto.randomUUID(),
+              userId: bersamaId,
+              name: "SeaBank Operasional Bersama",
+              type: "shared_spending",
+              balance: 1250000,
+              color: "#F59E0B"
+            }
+          ]);
+        }
+      }
+
+      // Query raw accounts
+      const targetIds = getTargetUserIds(userId);
+      const rawAccounts = await db.select().from(schema.accounts).where(inArray(schema.accounts.userId, targetIds));
+
+      // Filter and Map names
+      let filtered: Account[] = [];
+      if (userId === nibrasId) {
+        filtered = rawAccounts.filter(a => a.userId === nibrasId || a.userId === bersamaId);
+      } else if (userId === zenitaId) {
+        filtered = rawAccounts.filter(a => a.userId === zenitaId || a.userId === bersamaId);
+      } else if (userId === bersamaId) {
+        filtered = rawAccounts.filter(a => a.userId === bersamaId);
+      } else {
+        filtered = rawAccounts;
+      }
+
+      return filtered.map(a => {
+        if (userId === nibrasId) {
+          if (a.userId === nibrasId) {
+            return { ...a, name: "Rekening Pribadi Nibras" };
+          }
+          if (a.name.includes("Tabungan")) {
+            return { ...a, name: "SeaBank Tabungan Bersama (Transfer)" };
+          }
+          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
+            return { ...a, name: "SeaBank Operasional Bersama (Transfer)" };
+          }
+        } else if (userId === zenitaId) {
+          if (a.userId === zenitaId) {
+            return { ...a, name: "Rekening Pribadi Zenita" };
+          }
+          if (a.name.includes("Tabungan")) {
+            return { ...a, name: "SeaBank Tabungan Bersama (Transfer)" };
+          }
+          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
+            return { ...a, name: "SeaBank Operasional Bersama (Transfer)" };
+          }
+        } else if (userId === bersamaId) {
+          if (a.name.includes("Tabungan")) {
+            return { ...a, name: "SeaBank Tabungan Bersama" };
+          }
+          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
+            return { ...a, name: "SeaBank Operasional Bersama" };
+          }
+        }
+        return a;
+      });
+
+    } else {
+      // Memory Fallback
+      const currentProfileAccountsMemory = memoryDb.accounts.filter(a => a.userId === userId);
+      if (currentProfileAccountsMemory.length === 0) {
+        console.log(`No memory accounts found for profile ${userId}, creating defaults...`);
+        if (userId === nibrasId) {
+          memoryDb.accounts.push({
+            id: "a0000000-0000-0000-0000-000000000101",
+            userId: nibrasId,
+            name: "Rekening Pribadi",
+            type: "personal",
+            balance: 1500000,
+            color: "#3B82F6",
+            createdAt: new Date()
+          });
+        } else if (userId === zenitaId) {
+          memoryDb.accounts.push({
+            id: "a0000000-0000-0000-0000-000000000201",
+            userId: zenitaId,
+            name: "Rekening Pribadi",
+            type: "personal",
+            balance: 1500000,
+            color: "#EC4899",
+            createdAt: new Date()
+          });
+        } else if (userId === bersamaId) {
+          memoryDb.accounts.push(
+            {
+              id: "a0000000-0000-0000-0000-000000000301",
+              userId: bersamaId,
+              name: "SeaBank Tabungan Bersama",
+              type: "shared_savings",
+              balance: 5000000,
+              color: "#10B981",
+              createdAt: new Date()
+            },
+            {
+              id: "a0000000-0000-0000-0000-000000000302",
+              userId: bersamaId,
+              name: "SeaBank Operasional Bersama",
+              type: "shared_spending",
+              balance: 1250000,
+              color: "#F59E0B",
+              createdAt: new Date()
+            }
+          );
+        }
+      }
+
+      const targetIds = getTargetUserIds(userId);
+      const rawAccounts = memoryDb.accounts.filter((a) => targetIds.includes(a.userId));
+
+      let filtered: Account[] = [];
+      if (userId === nibrasId) {
+        filtered = rawAccounts.filter(a => a.userId === nibrasId || a.userId === bersamaId);
+      } else if (userId === zenitaId) {
+        filtered = rawAccounts.filter(a => a.userId === zenitaId || a.userId === bersamaId);
+      } else if (userId === bersamaId) {
+        filtered = rawAccounts.filter(a => a.userId === bersamaId);
+      } else {
+        filtered = rawAccounts;
+      }
+
+      return filtered.map(a => {
+        if (userId === nibrasId) {
+          if (a.userId === nibrasId) {
+            return { ...a, name: "Rekening Pribadi Nibras" };
+          }
+          if (a.name.includes("Tabungan")) {
+            return { ...a, name: "SeaBank Tabungan Bersama (Transfer)" };
+          }
+          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
+            return { ...a, name: "SeaBank Operasional Bersama (Transfer)" };
+          }
+        } else if (userId === zenitaId) {
+          if (a.userId === zenitaId) {
+            return { ...a, name: "Rekening Pribadi Zenita" };
+          }
+          if (a.name.includes("Tabungan")) {
+            return { ...a, name: "SeaBank Tabungan Bersama (Transfer)" };
+          }
+          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
+            return { ...a, name: "SeaBank Operasional Bersama (Transfer)" };
+          }
+        } else if (userId === bersamaId) {
+          if (a.name.includes("Tabungan")) {
+            return { ...a, name: "SeaBank Tabungan Bersama" };
+          }
+          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
+            return { ...a, name: "SeaBank Operasional Bersama" };
+          }
+        }
+        return a;
+      });
     }
-    return memoryDb.accounts.filter((a) => targetIds.includes(a.userId));
   },
 
   async createAccount(acc: { userId: string; name: string; type: string; balance: number; color?: string }): Promise<Account> {
@@ -698,12 +856,20 @@ export const dbService = {
   // --- CATEGORIES ---
   async getCategories(userId: string): Promise<Category[]> {
     const db = getDb();
+    let cats: Category[] = [];
     if (db) {
-      return await db.select().from(schema.categories).where(
+      cats = await db.select().from(schema.categories).where(
         sql`${schema.categories.userId} = ${userId} OR ${schema.categories.userId} IS NULL`
       );
+    } else {
+      cats = memoryDb.categories.filter((c) => c.userId === userId || c.userId === null);
     }
-    return memoryDb.categories.filter((c) => c.userId === userId || c.userId === null);
+    return cats.map(c => {
+      if (c.name === "Lainnya" || c.name === "Lainnya ") {
+        return { ...c, name: "Lain-lain" };
+      }
+      return c;
+    });
   },
 
   async createCategory(cat: { userId: string | null; name: string; type: string; icon?: string; color?: string }): Promise<Category> {
@@ -835,19 +1001,34 @@ export const dbService = {
     description?: string | null;
     date?: Date;
     receiptImageUrl?: string | null;
+    transferToAccountId?: string | null;
+    paidBy?: string | null;
+    reimburse?: boolean | null;
   }): Promise<Transaction> {
     const db = getDb();
     const id = crypto.randomUUID();
     const finalDate = tx.date || new Date();
+    
+    // Check if this is an expense with "Tabungan" category and has a transferToAccountId
+    const isTabunganCategory = tx.categoryId === "c0000000-0000-0000-0000-000000000007";
+    const linkedBersamaAccountId = tx.transferToAccountId && tx.transferToAccountId !== "pribadi" ? tx.transferToAccountId : null;
+
+    let finalDescription = tx.description || null;
+    if (tx.paidBy === "nibras") {
+      finalDescription = `${tx.description || "Transaksi"} [Paid by: Nibras]${tx.reimburse ? " [Reimbursed]" : ""}`;
+    } else if (tx.paidBy === "zenita") {
+      finalDescription = `${tx.description || "Transaksi"} [Paid by: Zenita]${tx.reimburse ? " [Reimbursed]" : ""}`;
+    }
+
     const newTx: Transaction = {
       id,
       userId: tx.userId,
       accountId: tx.accountId,
-      toAccountId: tx.toAccountId || null,
+      toAccountId: linkedBersamaAccountId || tx.toAccountId || null,
       categoryId: tx.categoryId || null,
       amount: tx.amount,
       type: tx.type,
-      description: tx.description || null,
+      description: finalDescription,
       date: finalDate,
       receiptImageUrl: tx.receiptImageUrl || null,
       createdAt: new Date(),
@@ -874,20 +1055,116 @@ export const dbService = {
 
     if (db) {
       const result = await db.insert(schema.transactions).values({
+        id,
         userId: tx.userId,
         accountId: tx.accountId,
-        toAccountId: tx.toAccountId || null,
+        toAccountId: linkedBersamaAccountId || tx.toAccountId || null,
         categoryId: tx.categoryId || null,
         amount: tx.amount,
         type: tx.type,
-        description: tx.description,
+        description: finalDescription,
         date: finalDate,
         receiptImageUrl: tx.receiptImageUrl,
       }).returning();
+
+      // Handle automatic linked transaction for Tabungan to Bersama
+      if (tx.type === "expense" && isTabunganCategory && linkedBersamaAccountId) {
+        const linkedId = crypto.randomUUID();
+        const userProfile = await db.select().from(schema.users).where(eq(schema.users.id, tx.userId));
+        const userName = userProfile[0]?.fullName || "Pribadi";
+        
+        // Adjust balance for the shared account
+        await adjustBalance(linkedBersamaAccountId, tx.amount);
+        
+        // Insert linked transaction
+        await db.insert(schema.transactions).values({
+          id: linkedId,
+          userId: "33333333-3333-3333-3333-333333333333", // Bersama
+          accountId: linkedBersamaAccountId, // SeaBank Account
+          toAccountId: tx.accountId, // Point back to source account
+          categoryId: tx.categoryId || null,
+          amount: tx.amount,
+          type: "income", // incoming transaction
+          description: `[Linked Tabungan] Simpanan dari ${userName}: ${tx.description || "Tabungan harian"}`,
+          date: finalDate,
+          receiptImageUrl: tx.receiptImageUrl,
+        });
+      }
+
+      // Handle automatic reimbursement logic
+      if (tx.reimburse && (tx.paidBy === "nibras" || tx.paidBy === "zenita")) {
+        const payerUserId = tx.paidBy === "nibras" ? "11111111-1111-1111-1111-111111111111" : "22222222-2222-2222-2222-222222222222";
+        const payerAccountId = tx.paidBy === "nibras" ? "a0000000-0000-0000-0000-000000000101" : "a0000000-0000-0000-0000-000000000201";
+        const reimbursementId = crypto.randomUUID();
+
+        // Increase payer's personal account balance
+        await adjustBalance(payerAccountId, tx.amount);
+
+        // Record reimbursement transaction in the payer's personal profile as "income"
+        await db.insert(schema.transactions).values({
+          id: reimbursementId,
+          userId: payerUserId,
+          accountId: payerAccountId,
+          categoryId: "c0000000-0000-0000-0000-000000000003", // Lainnya
+          amount: tx.amount,
+          type: "income",
+          description: `[Reimbursement] ${tx.description || "Ganti rugi perbelanjaan"}`,
+          date: finalDate,
+        });
+      }
+
       return result[0];
     }
 
+    // MEMORY DB FALLBACK
     memoryDb.transactions.push(newTx);
+    
+    if (tx.type === "expense" && isTabunganCategory && linkedBersamaAccountId) {
+      const linkedId = crypto.randomUUID();
+      const userName = tx.userId === "11111111-1111-1111-1111-111111111111" ? "Nibras" : "Zenita";
+      
+      await adjustBalance(linkedBersamaAccountId, tx.amount);
+      
+      const linkedTx: Transaction = {
+        id: linkedId,
+        userId: "33333333-3333-3333-3333-333333333333",
+        accountId: linkedBersamaAccountId,
+        toAccountId: tx.accountId,
+        categoryId: tx.categoryId || null,
+        amount: tx.amount,
+        type: "income",
+        description: `[Linked Tabungan] Simpanan dari ${userName}: ${tx.description || "Tabungan harian"}`,
+        date: finalDate,
+        receiptImageUrl: tx.receiptImageUrl || null,
+        createdAt: new Date(),
+      };
+      memoryDb.transactions.push(linkedTx);
+    }
+
+    // Handle automatic reimbursement logic in Memory Mode
+    if (tx.reimburse && (tx.paidBy === "nibras" || tx.paidBy === "zenita")) {
+      const payerUserId = tx.paidBy === "nibras" ? "11111111-1111-1111-1111-111111111111" : "22222222-2222-2222-2222-222222222222";
+      const payerAccountId = tx.paidBy === "nibras" ? "a0000000-0000-0000-0000-000000000101" : "a0000000-0000-0000-0000-000000000201";
+      const reimbursementId = crypto.randomUUID();
+
+      await adjustBalance(payerAccountId, tx.amount);
+
+      const reimbursementTx: Transaction = {
+        id: reimbursementId,
+        userId: payerUserId,
+        accountId: payerAccountId,
+        toAccountId: null,
+        categoryId: "c0000000-0000-0000-0000-000000000003",
+        amount: tx.amount,
+        type: "income",
+        description: `[Reimbursement] ${tx.description || "Ganti rugi perbelanjaan"}`,
+        date: finalDate,
+        receiptImageUrl: null,
+        createdAt: new Date(),
+      };
+      memoryDb.transactions.push(reimbursementTx);
+    }
+
     return newTx;
   },
 
@@ -922,6 +1199,44 @@ export const dbService = {
     } else if (tx.type === "transfer" && tx.toAccountId) {
       await adjustBalance(tx.accountId, tx.amount);
       await adjustBalance(tx.toAccountId, -tx.amount);
+    }
+
+    // Check if this is a linked transaction to delete the sibling
+    const isTabunganCategory = tx.categoryId === "c0000000-0000-0000-0000-000000000007";
+    const isLinkedExpense = tx.type === "expense" && isTabunganCategory && tx.toAccountId && (tx.toAccountId === "a0000000-0000-0000-0000-000000000301" || tx.toAccountId === "a0000000-0000-0000-0000-000000000302");
+
+    if (isLinkedExpense) {
+      const findSibling = async () => {
+        if (db) {
+          const results = await db.select().from(schema.transactions).where(and(
+            eq(schema.transactions.userId, "33333333-3333-3333-3333-333333333333"),
+            eq(schema.transactions.accountId, tx.toAccountId),
+            eq(schema.transactions.toAccountId, tx.accountId),
+            eq(schema.transactions.amount, tx.amount),
+            eq(schema.transactions.type, "income")
+          ));
+          return results[0];
+        }
+        return memoryDb.transactions.find(t => 
+          t.userId === "33333333-3333-3333-3333-333333333333" &&
+          t.accountId === tx.toAccountId &&
+          t.toAccountId === tx.accountId &&
+          t.amount === tx.amount &&
+          t.type === "income"
+        );
+      };
+
+      const sibling = await findSibling();
+      if (sibling) {
+        // Revert sibling's balance
+        await adjustBalance(sibling.accountId, -sibling.amount);
+        // Delete sibling
+        if (db) {
+          await db.delete(schema.transactions).where(eq(schema.transactions.id, sibling.id));
+        } else {
+          memoryDb.transactions = memoryDb.transactions.filter(t => t.id !== sibling.id);
+        }
+      }
     }
 
     if (db) {
@@ -1250,6 +1565,62 @@ export const dbService = {
 
     memoryDb.activityLogs.push(newLog);
     return newLog;
+  },
+
+  async getPartnerReport(): Promise<{
+    nibras: { balance: number; income: number; expense: number };
+    zenita: { balance: number; income: number; expense: number };
+    bersama: { tabunganBalance: number; operasionalBalance: number; transferIn: number; expense: number };
+  }> {
+    const db = getDb();
+    const nibrasId = "11111111-1111-1111-1111-111111111111";
+    const zenitaId = "22222222-2222-2222-2222-222222222222";
+    const bersamaId = "33333333-3333-3333-3333-333333333333";
+
+    let allAccounts: Account[] = [];
+    let allTransactions: Transaction[] = [];
+
+    if (db) {
+      allAccounts = await db.select().from(schema.accounts);
+      allTransactions = await db.select().from(schema.transactions);
+    } else {
+      allAccounts = memoryDb.accounts;
+      allTransactions = memoryDb.transactions;
+    }
+
+    // Calculations
+    const nibrasAccounts = allAccounts.filter(a => a.userId === nibrasId);
+    const nibrasBalance = nibrasAccounts.reduce((sum, a) => sum + a.balance, 0);
+    const nibrasTxs = allTransactions.filter(t => t.userId === nibrasId);
+    const nibrasIncome = nibrasTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+    const nibrasExpense = nibrasTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+
+    const zenitaAccounts = allAccounts.filter(a => a.userId === zenitaId);
+    const zenitaBalance = zenitaAccounts.reduce((sum, a) => sum + a.balance, 0);
+    const zenitaTxs = allTransactions.filter(t => t.userId === zenitaId);
+    const zenitaIncome = zenitaTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+    const zenitaExpense = zenitaTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+
+    const tabunganAcc = allAccounts.find(a => a.id === "a0000000-0000-0000-0000-000000000301");
+    const operasionalAcc = allAccounts.find(a => a.id === "a0000000-0000-0000-0000-000000000302");
+    
+    const tabunganBalance = tabunganAcc ? tabunganAcc.balance : 0;
+    const operasionalBalance = operasionalAcc ? operasionalAcc.balance : 0;
+
+    const bersamaTxs = allTransactions.filter(t => t.userId === bersamaId);
+    const bersamaTransferIn = bersamaTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+    const bersamaExpense = bersamaTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+
+    return {
+      nibras: { balance: nibrasBalance, income: nibrasIncome, expense: nibrasExpense },
+      zenita: { balance: zenitaBalance, income: zenitaIncome, expense: zenitaExpense },
+      bersama: {
+        tabunganBalance,
+        operasionalBalance,
+        transferIn: bersamaTransferIn,
+        expense: bersamaExpense
+      }
+    };
   },
 
   async initializeDatabaseSchema(): Promise<{ success: boolean; log: string }> {

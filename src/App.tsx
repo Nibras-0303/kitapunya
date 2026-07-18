@@ -10,6 +10,7 @@ import { SavingsView } from "./components/SavingsView.jsx";
 import { InvestmentsView } from "./components/InvestmentsView.jsx";
 import { GalleryView } from "./components/GalleryView.jsx";
 import { AdminView } from "./components/AdminView.jsx";
+import { PartnerReportView } from "./components/PartnerReportView.jsx";
 
 import { api } from "./services/api.js";
 import {
@@ -53,7 +54,7 @@ export default function App() {
     return local === "dark" ? "dark" : "light";
   });
 
-  const [currentView, setView] = useState("dashboard");
+  const [currentView, setCurrentView] = useState("dashboard");
   const [session, setSession] = useState<AuthSession | null>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("kitapunya_session");
@@ -71,6 +72,18 @@ export default function App() {
 
   // --- DATA STATES ---
   const [autoOpenOcr, setAutoOpenOcr] = useState(false);
+
+  const setView = (view: string) => {
+    if (view === "scan") {
+      setCurrentView("transactions");
+      setAutoOpenOcr(true);
+    } else {
+      setCurrentView(view);
+      if (view !== "transactions") {
+        setAutoOpenOcr(false);
+      }
+    }
+  };
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -437,6 +450,9 @@ export default function App() {
               investments={investments}
               setView={setView}
               openAddTxModal={() => setView("transactions")}
+              session={session}
+              savingsGoals={savingsGoals}
+              onCreateTransaction={handleCreateTransaction}
             />
           )}
 
@@ -514,6 +530,10 @@ export default function App() {
               logs={logs}
               showToast={showToast}
             />
+          )}
+
+          {currentView === "report" && (
+            <PartnerReportView showToast={showToast} />
           )}
 
           {/* More Options Custom Grid View */}
@@ -640,48 +660,57 @@ export default function App() {
           <span className="text-[10px]">Transaksi</span>
         </button>
 
-        {/* Item 3: Scan */}
-        <button
-          onClick={() => {
-            console.log("SCAN CLICKED");
-            setView("transactions");
-            setAutoOpenOcr(true);
-          }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
-            currentView === "transactions" && autoOpenOcr
-              ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
-              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-medium"
-          }`}
-        >
-          <Camera size={20} className="mb-0.5" />
-          <span className="text-[10px]">Scan</span>
-        </button>
+        {session?.fullName === "Uang Bersama" ? (
+          /* Joint-only Item 3: Laporan */
+          <button
+            onClick={() => {
+              setView("report");
+              setAutoOpenOcr(false);
+            }}
+            className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
+              currentView === "report"
+                ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
+                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-medium"
+            }`}
+          >
+            <PieChart size={20} className="mb-0.5" />
+            <span className="text-[10px]">Laporan</span>
+          </button>
+        ) : (
+          <>
+            {/* Personal Item 3: Scan */}
+            <button
+              onClick={() => {
+                setView("transactions");
+                setAutoOpenOcr(true);
+              }}
+              className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
+                currentView === "transactions" && autoOpenOcr
+                  ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
+                  : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-medium"
+              }`}
+            >
+              <Camera size={20} className="mb-0.5" />
+              <span className="text-[10px]">Scan</span>
+            </button>
 
-        {/* Item 4: Target */}
-        <button
-          onClick={() => setView("savings")}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
-            currentView === "savings"
-              ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
-              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-medium"
-          }`}
-        >
-          <Target size={20} className="mb-0.5" />
-          <span className="text-[10px]">Target</span>
-        </button>
-
-        {/* Item 5: Menu */}
-        <button
-          onClick={() => setView("menu")}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
-            ["menu", "accounts", "categories", "budgets", "investments", "admin"].includes(currentView)
-              ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
-              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-medium"
-          }`}
-        >
-          <Menu size={20} className="mb-0.5" />
-          <span className="text-[10px]">Menu</span>
-        </button>
+            {/* Personal Item 4: Target */}
+            <button
+              onClick={() => {
+                setView("savings");
+                setAutoOpenOcr(false);
+              }}
+              className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-2xl transition-all cursor-pointer ${
+                currentView === "savings"
+                  ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
+                  : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-medium"
+              }`}
+            >
+              <Target size={20} className="mb-0.5" />
+              <span className="text-[10px]">Target</span>
+            </button>
+          </>
+        )}
       </nav>
 
       {/* Modern custom toast notification dialog overlay */}
