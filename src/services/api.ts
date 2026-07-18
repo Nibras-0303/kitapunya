@@ -145,6 +145,10 @@ export const api = {
     await request(`/accounts/${id}`, { method: "DELETE" });
   },
 
+  async resetBalances(): Promise<void> {
+    await request("/accounts/reset-balances", { method: "POST" });
+  },
+
   // --- CATEGORIES ---
   async getCategories(): Promise<Category[]> {
     const res = await request<{ categories: Category[] }>("/categories");

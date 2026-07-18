@@ -155,12 +155,12 @@ class MemoryDatabase {
     // Default Accounts: Rekening Pribadi Nibras, Rekening Pribadi Zenita, SeaBank Tabungan, SeaBank Jajan Bulanan
     const defaultAccs = [
       // Nibras
-      { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 1500000, color: "#3B82F6", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 0, color: "#3B82F6", createdAt: new Date() },
       // Zenita
-      { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BCA", type: "personal", balance: 1500000, color: "#EC4899", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BCA", type: "personal", balance: 0, color: "#EC4899", createdAt: new Date() },
       // Uang Bersama
-      { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan", type: "shared_savings", balance: 5000000, color: "#10B981", createdAt: new Date() },
-      { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Jajan Bulanan", type: "shared_spending", balance: 1250000, color: "#F59E0B", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan", type: "shared_savings", balance: 0, color: "#10B981", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Jajan Bulanan", type: "shared_spending", balance: 0, color: "#F59E0B", createdAt: new Date() },
     ];
     this.accounts.push(...defaultAccs);
 
@@ -370,12 +370,12 @@ export async function seedDb(db: any) {
     } else {
       await db.insert(schema.accounts).values([
         // Nibras
-        { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 1500000, color: "#3B82F6" },
+        { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 0, color: "#3B82F6" },
         // Zenita
-        { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BCA", type: "personal", balance: 1500000, color: "#EC4899" },
+        { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BCA", type: "personal", balance: 0, color: "#EC4899" },
         // Uang Bersama
-        { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan", type: "shared_savings", balance: 5000000, color: "#10B981" },
-        { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Jajan Bulanan", type: "shared_spending", balance: 1250000, color: "#F59E0B" },
+        { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan", type: "shared_savings", balance: 0, color: "#10B981" },
+        { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Jajan Bulanan", type: "shared_spending", balance: 0, color: "#F59E0B" },
       ]).onConflictDoNothing();
       console.log("✓ Rekening dibuat");
     }
@@ -616,7 +616,7 @@ export const dbService = {
             userId: nibrasId,
             name: "Rekening Pribadi",
             type: "personal",
-            balance: 1500000,
+            balance: 0,
             color: "#3B82F6"
           });
         } else if (userId === zenitaId) {
@@ -625,7 +625,7 @@ export const dbService = {
             userId: zenitaId,
             name: "Rekening Pribadi",
             type: "personal",
-            balance: 1500000,
+            balance: 0,
             color: "#EC4899"
           });
         } else if (userId === bersamaId) {
@@ -635,7 +635,7 @@ export const dbService = {
               userId: bersamaId,
               name: "SeaBank Tabungan Bersama",
               type: "shared_savings",
-              balance: 5000000,
+              balance: 0,
               color: "#10B981"
             },
             {
@@ -643,7 +643,7 @@ export const dbService = {
               userId: bersamaId,
               name: "SeaBank Operasional Bersama",
               type: "shared_spending",
-              balance: 1250000,
+              balance: 0,
               color: "#F59E0B"
             }
           ]);
@@ -709,7 +709,7 @@ export const dbService = {
             userId: nibrasId,
             name: "Rekening Pribadi",
             type: "personal",
-            balance: 1500000,
+            balance: 0,
             color: "#3B82F6",
             createdAt: new Date()
           });
@@ -719,7 +719,7 @@ export const dbService = {
             userId: zenitaId,
             name: "Rekening Pribadi",
             type: "personal",
-            balance: 1500000,
+            balance: 0,
             color: "#EC4899",
             createdAt: new Date()
           });
@@ -730,7 +730,7 @@ export const dbService = {
               userId: bersamaId,
               name: "SeaBank Tabungan Bersama",
               type: "shared_savings",
-              balance: 5000000,
+              balance: 0,
               color: "#10B981",
               createdAt: new Date()
             },
@@ -739,7 +739,7 @@ export const dbService = {
               userId: bersamaId,
               name: "SeaBank Operasional Bersama",
               type: "shared_spending",
-              balance: 1250000,
+              balance: 0,
               color: "#F59E0B",
               createdAt: new Date()
             }
@@ -851,6 +851,22 @@ export const dbService = {
     const initialLen = memoryDb.accounts.length;
     memoryDb.accounts = memoryDb.accounts.filter(a => a.id !== id);
     return memoryDb.accounts.length < initialLen;
+  },
+
+  async resetBalances(userId: string): Promise<void> {
+    const db = getDb();
+    const targetIds = getTargetUserIds(userId);
+    if (db) {
+      await db.update(schema.accounts)
+        .set({ balance: 0 })
+        .where(inArray(schema.accounts.userId, targetIds));
+    } else {
+      memoryDb.accounts.forEach(a => {
+        if (targetIds.includes(a.userId)) {
+          a.balance = 0;
+        }
+      });
+    }
   },
 
   // --- CATEGORIES ---
