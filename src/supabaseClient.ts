@@ -6,7 +6,7 @@ const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
-    "Awas: VITE_SUPABASE_URL atau VITE_SUPABASE_ANON_KEY tidak ditemui dalam environment. Sila pastikan fail .env diletakkan dengan betul."
+    "Peringatan: VITE_SUPABASE_URL atau VITE_SUPABASE_ANON_KEY tidak ditemukan di environment. Silakan pastikan file .env diletakkan dengan benar."
   );
 }
 
@@ -15,7 +15,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function uploadReceiptImage(file: File | Blob): Promise<string> {
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase URL atau Anon Key tidak dikesan. Sila hubungi pentadbir sistem.");
+    throw new Error("Supabase URL atau Anon Key tidak terdeteksi. Silakan hubungi administrator sistem.");
   }
 
   const fileExt = file.type.split("/")[1] || "jpg";
@@ -58,10 +58,10 @@ export async function uploadReceiptImage(file: File | Blob): Promise<string> {
         const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(fileName);
         return urlData.publicUrl;
       } catch (retryBucketErr: any) {
-        throw new Error(`Gagal memuat naik imej resit: ${retryBucketErr.message || retryBucketErr}`);
+        throw new Error(`Gagal mengunggah gambar struk: ${retryBucketErr.message || retryBucketErr}`);
       }
     }
-    throw new Error(`Gagal memuat naik imej resit: ${error.message}`);
+    throw new Error(`Gagal mengunggah gambar struk: ${error.message}`);
   }
 
   // Get public URL
@@ -70,7 +70,7 @@ export async function uploadReceiptImage(file: File | Blob): Promise<string> {
     .getPublicUrl(fileName);
 
   if (!urlData || !urlData.publicUrl) {
-    throw new Error("Gagal mendapatkan URL awam bagi imej yang dimuat naik.");
+    throw new Error("Gagal mendapatkan URL publik untuk gambar yang diunggah.");
   }
 
   return urlData.publicUrl;

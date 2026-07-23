@@ -64,9 +64,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // Quick Add Manual Transaction Form States
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickAmount, setQuickAmount] = useState("");
-  const [quickType, setQuickType] = useState<"income" | "expense">("expense");
+  const [quickType, setQuickType] = useState<"income" | "expense" | "transfer">("expense");
   const [quickCategoryId, setQuickCategoryId] = useState("");
   const [quickAccountId, setQuickAccountId] = useState("");
+  const [quickToAccountId, setQuickToAccountId] = useState("");
   const [quickDate, setQuickDate] = useState(new Date().toISOString().substring(0, 10));
   const [quickDescription, setQuickDescription] = useState("");
   const [formError, setFormError] = useState("");
@@ -103,6 +104,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Set default category when quickType or categories change
   useEffect(() => {
+    if (quickType === "transfer") {
+      setQuickCategoryId("");
+      return;
+    }
     const filteredCats = categories.filter(c => c.type === quickType);
     if (filteredCats.length > 0) {
       setQuickCategoryId(filteredCats[0].id);
@@ -112,8 +117,57 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, [categories, quickType]);
 
   const filteredCategories = useMemo(() => {
+    if (quickType === "transfer") return [];
     return categories.filter(c => c.type === quickType);
   }, [categories, quickType]);
+
+  // Dynamically calculate valid destination accounts based on guidelines
+  const destinationAccounts = useMemo(() => {
+    if (quickType !== "transfer") return [];
+    const isNibras = session?.id === "11111111-1111-1111-1111-111111111111" || session?.fullName === "Nibras";
+    const isZenita = session?.id === "22222222-2222-2222-2222-222222222222" || session?.fullName === "Zenita";
+    const isBersama = session?.id === "33333333-3333-3333-3333-333333333333" || session?.fullName === "Uang Bersama";
+
+    const list: { id: string; name: string }[] = [];
+
+    if (isNibras) {
+      if (quickAccountId !== "a0000000-0000-0000-0000-000000000101") {
+        list.push({ id: "a0000000-0000-0000-0000-000000000101", name: "Mandiri" });
+      }
+      if (quickAccountId !== "a0000000-0000-0000-0000-000000000102") {
+        list.push({ id: "a0000000-0000-0000-0000-000000000102", name: "Tunai" });
+      }
+      list.push({ id: "a0000000-0000-0000-0000-000000000301", name: "SeaBank Tabungan Bersama" });
+      list.push({ id: "a0000000-0000-0000-0000-000000000302", name: "SeaBank Operasional Bersama" });
+    } else if (isZenita) {
+      if (quickAccountId !== "a0000000-0000-0000-0000-000000000201") {
+        list.push({ id: "a0000000-0000-0000-0000-000000000201", name: "BRI" });
+      }
+      if (quickAccountId !== "a0000000-0000-0000-0000-000000000202") {
+        list.push({ id: "a0000000-0000-0000-0000-000000000202", name: "Tunai" });
+      }
+      list.push({ id: "a0000000-0000-0000-0000-000000000301", name: "SeaBank Tabungan Bersama" });
+      list.push({ id: "a0000000-0000-0000-0000-000000000302", name: "SeaBank Operasional Bersama" });
+    } else if (isBersama) {
+      if (quickAccountId !== "a0000000-0000-0000-0000-000000000301") {
+        list.push({ id: "a0000000-0000-0000-0000-000000000301", name: "SeaBank Tabungan Bersama" });
+      }
+      if (quickAccountId !== "a0000000-0000-0000-0000-000000000302") {
+        list.push({ id: "a0000000-0000-0000-0000-000000000302", name: "SeaBank Operasional Bersama" });
+      }
+    }
+    return list;
+  }, [quickType, session, quickAccountId]);
+
+  // Maintain active destination selection
+  useEffect(() => {
+    if (quickType === "transfer" && destinationAccounts.length > 0) {
+      const exists = destinationAccounts.some(d => d.id === quickToAccountId);
+      if (!exists) {
+        setQuickToAccountId(destinationAccounts[0].id);
+      }
+    }
+  }, [quickType, destinationAccounts, quickToAccountId]);
 
   const handleQuickAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,20 +185,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       return;
     }
 
-    if (!quickCategoryId) {
-      setFormError("Kategori harus dipilih.");
-      return;
+    // Strict validation: Prevent negative balances for expenses and transfers
+    if (quickType === "expense" || quickType === "transfer") {
+      const sourceAcc = localAccounts.find(a => a.id === quickAccountId);
+      if (sourceAcc && sourceAcc.balance < amountNum) {
+        setFormError("Saldo tidak mencukupi untuk melakukan transaksi ini.");
+        return;
+      }
+    }
+
+    if (quickType === "transfer") {
+      if (!quickToAccountId) {
+        setFormError("Rekening tujuan harus dipilih.");
+        return;
+      }
+      if (quickAccountId === quickToAccountId) {
+        setFormError("Rekening asal dan tujuan tidak boleh sama.");
+        return;
+      }
+    } else {
+      if (!quickCategoryId) {
+        setFormError("Kategori harus dipilih.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
     try {
       const txPayload = {
         accountId: quickAccountId,
-        toAccountId: null,
-        categoryId: quickCategoryId,
+        toAccountId: quickType === "transfer" ? quickToAccountId : null,
+        categoryId: quickType === "transfer" ? null : quickCategoryId,
         amount: amountNum,
         type: quickType,
-        description: quickDescription || `Manual ${quickType === "income" ? "Pemasukan" : "Pengeluaran"}`,
+        description: quickDescription || (quickType === "transfer" ? "Transfer Dana" : `Manual ${quickType === "income" ? "Pemasukan" : "Pengeluaran"}`),
         date: quickDate,
         receiptImageUrl: null,
       };
@@ -158,11 +232,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       setSuccessMsg("Transaksi berhasil disimpan secara manual!");
       setQuickAmount("");
       setQuickDescription("");
-      // keep date, type, account, category as they are or reset to defaults
-      const filteredCats = categories.filter(c => c.type === quickType);
-      if (filteredCats.length > 0) {
-        setQuickCategoryId(filteredCats[0].id);
+      
+      if (quickType !== "transfer") {
+        const filteredCats = categories.filter(c => c.type === quickType);
+        if (filteredCats.length > 0) {
+          setQuickCategoryId(filteredCats[0].id);
+        }
       }
+
       setTimeout(() => {
         setIsQuickAddOpen(false);
         setSuccessMsg("");
@@ -323,19 +400,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {isJoint ? (
                 <>
                   <Users size={22} className="text-emerald-350" />
-                  Hub Kewangan Bersama Pasangan 💖
+                  Pusat Keuangan Bersama Pasangan 💖
                 </>
               ) : (
                 <>
                   <User size={22} className="text-blue-300" />
-                  Saku Peribadi {session?.fullName} 👤
+                  Dompet Pribadi {session?.fullName} 👤
                 </>
               )}
             </h2>
             <p className="text-white/80 text-xs md:text-sm font-medium mt-1.5 max-w-xl">
               {isJoint
-                ? "Pantau seluruh kekayaan isi rumah, prestasi simpanan bersama, serta kontribusi aktif anda dan pasangan secara automatik."
-                : `Urus baki simpanan peribadi, jajan peribadi, bajet bulanan, dan target tabungan anda secara terlindung.`}
+                ? "Pantau seluruh kekayaan rumah tangga, performa tabungan bersama, serta kontribusi aktif Anda dan pasangan secara otomatis."
+                : `Kelola saldo tabungan pribadi, uang saku pribadi, anggaran bulanan, dan target tabungan Anda secara aman.`}
             </p>
           </div>
           {isJoint && (
@@ -436,12 +513,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             )}
 
             <form onSubmit={handleQuickAddSubmit} className="space-y-4">
-              {/* Jenis: Pemasukan / Pengeluaran */}
+              {/* Jenis: Pemasukan / Pengeluaran / Transfer */}
               <div>
                 <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
                   Jenis Transaksi
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setQuickType("expense")}
@@ -465,6 +542,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   >
                     <span className={`w-2.5 h-2.5 rounded-full bg-emerald-500 ${quickType === "income" ? "scale-110" : "opacity-60"}`} />
                     Pemasukan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuickType("transfer")}
+                    className={`flex items-center justify-center gap-2 py-2.5 rounded-2xl border text-xs font-extrabold transition-all cursor-pointer ${
+                      quickType === "transfer"
+                        ? "border-blue-500 bg-blue-50/20 text-blue-600 dark:text-blue-400 font-black ring-2 ring-blue-500/10"
+                        : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850"
+                    }`}
+                  >
+                    <span className={`w-2.5 h-2.5 rounded-full bg-blue-500 ${quickType === "transfer" ? "scale-110" : "opacity-60"}`} />
+                    Transfer
                   </button>
                 </div>
               </div>
@@ -504,33 +593,53 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Kategori * */}
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
-                    Kategori *
-                  </label>
-                  <select
-                    value={quickCategoryId}
-                    onChange={(e) => setQuickCategoryId(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl text-xs font-bold outline-none text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                    required
-                  >
-                    {filteredCategories.length > 0 ? (
-                      filteredCategories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
+                {/* Dynamic: Kategori OR Rekening Tujuan */}
+                {quickType !== "transfer" ? (
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                      Kategori *
+                    </label>
+                    <select
+                      value={quickCategoryId}
+                      onChange={(e) => setQuickCategoryId(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl text-xs font-bold outline-none text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                      required
+                    >
+                      {filteredCategories.length > 0 ? (
+                        filteredCategories.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">-- Tanpa Kategori --</option>
+                      )}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                      Rekening Penerima (Tujuan) *
+                    </label>
+                    <select
+                      value={quickToAccountId}
+                      onChange={(e) => setQuickToAccountId(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl text-xs font-bold outline-none text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                      required
+                    >
+                      {destinationAccounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
                         </option>
-                      ))
-                    ) : (
-                      <option value="">-- Tanpa Kategori --</option>
-                    )}
-                  </select>
-                </div>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-                {/* Rekening * */}
+                {/* Rekening Asal / Sumber * */}
                 <div>
                   <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
-                    {quickType === "expense" ? "Rekening Sumber (Keluar Dari) *" : "Rekening Penerima (Masuk Ke) *"}
+                    {quickType === "income" ? "Rekening Penerima (Masuk Ke) *" : "Rekening Asal (Sumber) *"}
                   </label>
                   {loadingAccounts ? (
                     <div className="text-xs font-semibold text-zinc-500 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl px-4 animate-pulse flex items-center gap-2">
@@ -675,12 +784,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div>
               <span className="text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
-                Baki Saku Peribadi
+                Saldo Dompet Pribadi
               </span>
               <h3 className="text-xl font-extrabold text-zinc-950 dark:text-zinc-50 mt-1">
                 {formatRupiah(totalBalance)}
               </h3>
-              <p className="text-[10px] text-zinc-400 mt-1">Simpanan terisolasi milik anda</p>
+              <p className="text-[10px] text-zinc-400 mt-1">Simpanan terisolasi milik Anda</p>
             </div>
           </div>
 
@@ -789,7 +898,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 Progress Target Tabungan Bersama
               </h3>
               <p className="text-xs text-zinc-400 font-medium mb-6">
-                Matlamat simpanan yang dibina di bawah profil Uang Bersama untuk merancang masa depan.
+                Target tabungan yang dibuat di bawah profil Uang Bersama untuk merencanakan masa depan.
               </p>
 
               {savingsGoals && savingsGoals.length > 0 ? (
@@ -807,7 +916,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         </div>
                         <div className="flex justify-between text-[10px] text-zinc-400 font-bold">
                           <span>{formatRupiah(goal.currentAmount)} terkumpul</span>
-                          <span>Sasaran {formatRupiah(goal.targetAmount)}</span>
+                          <span>Target {formatRupiah(goal.targetAmount)}</span>
                         </div>
                       </div>
                     );
@@ -816,18 +925,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               ) : (
                 <div className="flex flex-col items-center justify-center py-6 text-zinc-400 dark:text-zinc-600 gap-1.5">
                   <Target size={28} className="text-zinc-300 dark:text-zinc-700" />
-                  <span className="text-xs font-bold">Belum ada sasaran tabungan bersama</span>
+                  <span className="text-xs font-bold">Belum ada target tabungan bersama</span>
                   <button
                     onClick={() => setView("savings")}
                     className="text-[10px] text-purple-600 dark:text-purple-400 font-black tracking-wider uppercase mt-1 cursor-pointer"
                   >
-                    Cipta Sasaran
+                    Buat Target
                   </button>
                 </div>
               )}
             </div>
             <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-zinc-400 font-medium">
-              *Simpanan bertambah automatik setiap kali Nibras/Zenita memindahkan baki ke Tabungan Bersama.
+              *Tabungan bertambah otomatis setiap kali Nibras/Zenita memindahkan saldo ke Tabungan Bersama.
             </div>
           </div>
         </div>
@@ -937,9 +1046,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                  <th className="pb-3 pl-2">Tarikh & Keterangan</th>
+                  <th className="pb-3 pl-2">Tanggal & Keterangan</th>
                   <th className="pb-3">Kategori</th>
-                  <th className="pb-3">Akaun</th>
+                  <th className="pb-3">Rekening</th>
                   <th className="pb-3 text-right pr-2">Jumlah</th>
                 </tr>
               </thead>
@@ -967,12 +1076,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             <span className="text-zinc-700 dark:text-zinc-300">{cat.name}</span>
                           </div>
                         ) : (
-                          <span className="text-zinc-400 font-medium">Pindahan</span>
+                          <span className="text-zinc-400 font-medium">Transfer</span>
                         )}
                       </td>
                       <td className="py-3.5">
                         <span className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-2.5 py-1 rounded-lg">
-                          {acc?.name || "Akaun Luar"}
+                          {acc?.name || "Rekening Luar"}
                         </span>
                       </td>
                       <td className={`py-3.5 text-right pr-2 font-extrabold ${isIncome ? "text-emerald-600 dark:text-emerald-400" : isExpense ? "text-red-600 dark:text-red-400" : "text-zinc-600 dark:text-zinc-400"}`}>

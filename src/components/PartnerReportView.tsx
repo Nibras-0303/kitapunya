@@ -10,7 +10,9 @@ import {
   AlertCircle,
   Loader2,
   Calendar,
-  Wallet
+  Wallet,
+  Trash2,
+  RefreshCw
 } from "lucide-react";
 import { api } from "../services/api.js";
 import { formatRupiah } from "../utils/format.js";
@@ -24,19 +26,37 @@ export const PartnerReportView: React.FC<PartnerReportViewProps> = ({ showToast 
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadReport = () => {
     setLoading(true);
     api.getPartnerReport()
       .then(data => {
         setReport(data);
       })
       .catch(err => {
-        showToast("Gagal memuat naik laporan kewangan pasangan: " + err.message, "error");
+        showToast("Gagal memuat laporan keuangan: " + err.message, "error");
       })
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadReport();
   }, [showToast]);
+
+  const handleResetData = async () => {
+    if (confirm("Apakah Anda yakin ingin mengosongkan seluruh laporan dan data keuangan test? Tindakan ini tidak dapat dibatalkan.")) {
+      try {
+        setLoading(true);
+        await api.resetData();
+        showToast("Semua data laporan keuangan berhasil dikosongkan!", "success");
+        loadReport();
+      } catch (err: any) {
+        showToast("Gagal mengosongkan data: " + err.message, "error");
+        setLoading(false);
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -92,7 +112,7 @@ export const PartnerReportView: React.FC<PartnerReportViewProps> = ({ showToast 
   return (
     <div className="space-y-6">
       {/* Title & Banner */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-2xl">
             <FileText size={24} />
@@ -103,10 +123,18 @@ export const PartnerReportView: React.FC<PartnerReportViewProps> = ({ showToast 
               <Heart size={16} className="text-pink-500 fill-pink-500 animate-bounce" />
             </h2>
             <p className="text-xs text-zinc-400 font-medium">
-              Ringkasan gabungan saku peribadi dan rekening bersama secara telus, selamat, dan real-time.
+              Ringkasan gabungan saku pribadi dan rekening bersama secara transparan, aman, dan real-time.
             </p>
           </div>
         </div>
+
+        <button
+          onClick={handleResetData}
+          className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-2xl text-xs font-bold transition-all border border-red-200 dark:border-red-800/50 cursor-pointer self-start md:self-auto"
+        >
+          <Trash2 size={16} />
+          <span>Kosongkan Data Keuangan</span>
+        </button>
       </div>
 
       {/* Aggregate Overview Card */}
@@ -117,16 +145,16 @@ export const PartnerReportView: React.FC<PartnerReportViewProps> = ({ showToast 
             {formatRupiah(combinedNetWorth)}
           </h2>
           <p className="text-xs text-emerald-100 font-medium mt-2 max-w-lg">
-            Menggabungkan baki dari akaun peribadi Nibras, akaun peribadi Zenita, serta seluruh baki rekening Uang Bersama di SeaBank.
+            Menggabungkan saldo dari rekening pribadi Nibras, rekening pribadi Zenita, serta seluruh saldo rekening Uang Bersama di SeaBank.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/15">
-            <span className="text-[10px] text-white/75 font-bold uppercase tracking-wider block">Baki Peribadi</span>
+            <span className="text-[10px] text-white/75 font-bold uppercase tracking-wider block">Saldo Pribadi</span>
             <span className="text-sm font-black text-white">{formatRupiah(report.nibras.balance + report.zenita.balance)}</span>
           </div>
           <div className="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/15">
-            <span className="text-[10px] text-white/75 font-bold uppercase tracking-wider block">Baki Rekening Bersama</span>
+            <span className="text-[10px] text-white/75 font-bold uppercase tracking-wider block">Saldo Rekening Bersama</span>
             <span className="text-sm font-black text-white">{formatRupiah(report.bersama.tabunganBalance + report.bersama.operasionalBalance)}</span>
           </div>
         </div>
@@ -144,7 +172,7 @@ export const PartnerReportView: React.FC<PartnerReportViewProps> = ({ showToast 
             </div>
             <div className="space-y-4">
               <div>
-                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Baki Saku Peribadi</span>
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Saldo Dompet Pribadi</span>
                 <span className="text-lg font-black text-zinc-800 dark:text-zinc-100">{formatRupiah(report.nibras.balance)}</span>
               </div>
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
@@ -171,7 +199,7 @@ export const PartnerReportView: React.FC<PartnerReportViewProps> = ({ showToast 
             </div>
             <div className="space-y-4">
               <div>
-                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Baki Saku Peribadi</span>
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Saldo Dompet Pribadi</span>
                 <span className="text-lg font-black text-zinc-800 dark:text-zinc-100">{formatRupiah(report.zenita.balance)}</span>
               </div>
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
@@ -198,7 +226,7 @@ export const PartnerReportView: React.FC<PartnerReportViewProps> = ({ showToast 
             </div>
             <div className="space-y-4">
               <div>
-                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Baki Rekening Bersama</span>
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Saldo Rekening Bersama</span>
                 <span className="text-lg font-black text-zinc-800 dark:text-zinc-100">
                   {formatRupiah(report.bersama.tabunganBalance + report.bersama.operasionalBalance)}
                 </span>
@@ -270,7 +298,7 @@ export const PartnerReportView: React.FC<PartnerReportViewProps> = ({ showToast 
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-400 gap-2">
                   <AlertCircle size={32} />
-                  <span className="text-xs font-semibold">Tiada baki dikesan</span>
+                  <span className="text-xs font-semibold">Tidak ada saldo terdeteksi</span>
                 </div>
               )}
             </div>

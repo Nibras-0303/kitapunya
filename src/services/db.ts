@@ -91,6 +91,60 @@ export interface ActivityLog {
   createdAt: Date;
 }
 
+export const staticCategories = [
+  // --- NIBRAS & ZENITA CATEGORIES ---
+  // Pemasukan
+  { id: "c1111111-0000-0000-0000-000000000001", name: "Gaji", type: "income", icon: "Briefcase", color: "#10B981" },
+  { id: "c1111111-0000-0000-0000-000000000002", name: "Bonus", type: "income", icon: "TrendingUp", color: "#059669" },
+  { id: "c1111111-0000-0000-0000-000000000003", name: "Freelance", type: "income", icon: "Laptop", color: "#3B82F6" },
+  { id: "c1111111-0000-0000-0000-000000000004", name: "Hadiah", type: "income", icon: "Gift", color: "#F59E0B" },
+  { id: "c1111111-0000-0000-0000-000000000005", name: "Penjualan", type: "income", icon: "ShoppingBag", color: "#EC4899" },
+  { id: "c1111111-0000-0000-0000-000000000006", name: "Transfer Masuk", type: "income", icon: "ArrowLeftRight", color: "#8B5CF6" },
+  { id: "c1111111-0000-0000-0000-000000000023", name: "Pengembalian Dana", type: "income", icon: "RotateCcw", color: "#14B8A6" },
+  { id: "c1111111-0000-0000-0000-000000000007", name: "Lainnya", type: "income", icon: "Tag", color: "#6B7280" },
+  
+  // Pengeluaran
+  { id: "c1111111-0000-0000-0000-000000000008", name: "Makan", type: "expense", icon: "Utensils", color: "#EF4444" },
+  { id: "c1111111-0000-0000-0000-000000000009", name: "Minum", type: "expense", icon: "Coffee", color: "#F43F5E" },
+  { id: "c1111111-0000-0000-0000-000000000010", name: "Transportasi", type: "expense", icon: "Car", color: "#3B82F6" },
+  { id: "c1111111-0000-0000-0000-000000000011", name: "Bensin", type: "expense", icon: "Fuel", color: "#06B6D4" },
+  { id: "c1111111-0000-0000-0000-000000000012", name: "Parkir", type: "expense", icon: "SquareDot", color: "#00A8E8" },
+  { id: "c1111111-0000-0000-0000-000000000013", name: "Belanja", type: "expense", icon: "ShoppingBag", color: "#EC4899" },
+  { id: "c1111111-0000-0000-0000-000000000014", name: "Hiburan", type: "expense", icon: "Gamepad2", color: "#F59E0B" },
+  { id: "c1111111-0000-0000-0000-000000000015", name: "Pulsa & Internet", type: "expense", icon: "Wifi", color: "#10B981" },
+  { id: "c1111111-0000-0000-0000-000000000016", name: "Tagihan", type: "expense", icon: "FileText", color: "#D946EF" },
+  { id: "c1111111-0000-0000-0000-000000000017", name: "Kesehatan", type: "expense", icon: "Activity", color: "#14B8A6" },
+  { id: "c1111111-0000-0000-0000-000000000018", name: "Pendidikan", type: "expense", icon: "GraduationCap", color: "#6366F1" },
+  { id: "c1111111-0000-0000-0000-000000000019", name: "Sedekah", type: "expense", icon: "Heart", color: "#E11D48" },
+  { id: "c1111111-0000-0000-0000-000000000020", name: "Transfer ke Tabungan Bersama", type: "expense", icon: "Target", color: "#8B5CF6" },
+  { id: "c1111111-0000-0000-0000-000000000021", name: "Transfer ke Operasional Bersama", type: "expense", icon: "Wallet", color: "#F59E0B" },
+  { id: "c1111111-0000-0000-0000-000000000022", name: "Lainnya", type: "expense", icon: "Tag", color: "#6B7280" },
+
+  // --- UANG BERSAMA CATEGORIES ---
+  // Pemasukan
+  { id: "c3333333-0000-0000-0000-000000000001", name: "Transfer dari Nibras", type: "income", icon: "ArrowLeftRight", color: "#3B82F6" },
+  { id: "c3333333-0000-0000-0000-000000000002", name: "Transfer dari Zenita", type: "income", icon: "ArrowLeftRight", color: "#EC4899" },
+  { id: "c3333333-0000-0000-0000-000000000003", name: "Bunga", type: "income", icon: "Percent", color: "#10B981" },
+  { id: "c3333333-0000-0000-0000-000000000004", name: "Pengembalian", type: "income", icon: "RotateCcw", color: "#06B6D4" },
+  { id: "c3333333-0000-0000-0000-000000000005", name: "Lainnya", type: "income", icon: "Tag", color: "#6B7280" },
+
+  // Pengeluaran
+  { id: "c3333333-0000-0000-0000-000000000006", name: "Penarikan Tabungan", type: "expense", icon: "ArrowDownCircle", color: "#EF4444" },
+  { id: "c3333333-0000-0000-0000-000000000007", name: "Makan", type: "expense", icon: "Utensils", color: "#EF4444" },
+  { id: "c3333333-0000-0000-0000-000000000008", name: "Minum", type: "expense", icon: "Coffee", color: "#F43F5E" },
+  { id: "c3333333-0000-0000-0000-000000000009", name: "Belanja", type: "expense", icon: "ShoppingBag", color: "#EC4899" },
+  { id: "c3333333-0000-0000-0000-000000000010", name: "Bensin", type: "expense", icon: "Fuel", color: "#06B6D4" },
+  { id: "c3333333-0000-0000-0000-000000000011", name: "Parkir", type: "expense", icon: "SquareDot", color: "#00A8E8" },
+  { id: "c3333333-0000-0000-0000-000000000012", name: "Jalan-jalan", type: "expense", icon: "Compass", color: "#10B981" },
+  { id: "c3333333-0000-0000-0000-000000000013", name: "Cafe", type: "expense", icon: "GlassWater", color: "#F59E0B" },
+  { id: "c3333333-0000-0000-0000-000000000014", name: "Nongkrong", type: "expense", icon: "Users", color: "#8B5CF6" },
+  { id: "c3333333-0000-0000-0000-000000000015", name: "Hiburan", type: "expense", icon: "Gamepad2", color: "#EC4899" },
+  { id: "c3333333-0000-0000-0000-000000000016", name: "Laundry", type: "expense", icon: "Shirt", color: "#6366F1" },
+  { id: "c3333333-0000-0000-0000-000000000017", name: "Rumah Tangga", type: "expense", icon: "Home", color: "#14B8A6" },
+  { id: "c3333333-0000-0000-0000-000000000018", name: "Tagihan", type: "expense", icon: "FileText", color: "#D946EF" },
+  { id: "c3333333-0000-0000-0000-000000000019", name: "Lainnya", type: "expense", icon: "Tag", color: "#6B7280" }
+];
+
 // Memory database storage for fallback
 class MemoryDatabase {
   users: User[] = [];
@@ -137,30 +191,36 @@ class MemoryDatabase {
       createdAt: new Date(),
     });
 
-    // Default Categories: Simplified list of categories (income & expense)
-    const defaultCats = [
-      // Pemasukan
-      { id: "c0000000-0000-0000-0000-000000000001", userId: null, name: "Gaji", type: "income" as const, icon: "Briefcase", color: "#10B981" },
-      { id: "c0000000-0000-0000-0000-000000000002", userId: null, name: "Bonus", type: "income" as const, icon: "TrendingUp", color: "#059669" },
-      { id: "c0000000-0000-0000-0000-000000000003", userId: null, name: "Lain-lain", type: "income" as const, icon: "Tag", color: "#6B7280" },
-      // Pengeluaran
-      { id: "c0000000-0000-0000-0000-000000000004", userId: null, name: "Jajan", type: "expense" as const, icon: "ShoppingBag", color: "#EC4899" },
-      { id: "c0000000-0000-0000-0000-000000000005", userId: null, name: "Makan", type: "expense" as const, icon: "Utensils", color: "#EF4444" },
-      { id: "c0000000-0000-0000-0000-000000000006", userId: null, name: "Kebutuhan", type: "expense" as const, icon: "Home", color: "#3B82F6" },
-      { id: "c0000000-0000-0000-0000-000000000007", userId: null, name: "Tabungan", type: "expense" as const, icon: "Target", color: "#8B5CF6" },
-      { id: "c0000000-0000-0000-0000-000000000008", userId: null, name: "Lain-lain", type: "expense" as const, icon: "Tag", color: "#6B7280" },
-    ];
-    this.categories.push(...defaultCats.map(c => ({ ...c, createdAt: new Date() })));
+    // Seed static categories mapped with correct userId where appropriate
+    this.categories = staticCategories.map(c => {
+      let userId: string | null = null;
+      if (c.id.startsWith("c1111111")) {
+        userId = null; // general for both Nibras and Zenita
+      } else if (c.id.startsWith("c3333333")) {
+        userId = bersamaId;
+      }
+      return {
+        id: c.id,
+        userId,
+        name: c.name,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        createdAt: new Date()
+      };
+    });
 
-    // Default Accounts: Rekening Pribadi Nibras, Rekening Pribadi Zenita, SeaBank Tabungan, SeaBank Jajan Bulanan
+    // Default Accounts exactly per Profile guidelines
     const defaultAccs = [
       // Nibras
       { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 0, color: "#3B82F6", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000102", userId: nibrasId, name: "Tunai", type: "personal", balance: 0, color: "#10B981", createdAt: new Date() },
       // Zenita
-      { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BCA", type: "personal", balance: 0, color: "#EC4899", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BRI", type: "personal", balance: 0, color: "#EC4899", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000202", userId: zenitaId, name: "Tunai", type: "personal", balance: 0, color: "#10B981", createdAt: new Date() },
       // Uang Bersama
-      { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan", type: "shared_savings", balance: 0, color: "#10B981", createdAt: new Date() },
-      { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Jajan Bulanan", type: "shared_spending", balance: 0, color: "#F59E0B", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan Bersama", type: "shared_savings", balance: 0, color: "#10B981", createdAt: new Date() },
+      { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Operasional Bersama", type: "shared_spending", balance: 0, color: "#F59E0B", createdAt: new Date() },
     ];
     this.accounts.push(...defaultAccs);
 
@@ -178,7 +238,7 @@ class MemoryDatabase {
       id: "log-init",
       userId: bersamaId,
       action: "INITIALIZE",
-      details: "Sistem pengurusan kewangan berjaya dimulakan",
+      details: "Sistem pengelolaan keuangan berhasil dimulai",
       createdAt: new Date(),
     });
   }
@@ -364,51 +424,73 @@ export async function seedDb(db: any) {
     }
 
     // 2. Check Accounts
-    const existingAccounts = await db.select().from(schema.accounts);
-    if (existingAccounts && existingAccounts.length > 0) {
-      console.log("Accounts sudah ada");
-    } else {
-      await db.insert(schema.accounts).values([
-        // Nibras
-        { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 0, color: "#3B82F6" },
-        // Zenita
-        { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BCA", type: "personal", balance: 0, color: "#EC4899" },
-        // Uang Bersama
-        { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan", type: "shared_savings", balance: 0, color: "#10B981" },
-        { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Jajan Bulanan", type: "shared_spending", balance: 0, color: "#F59E0B" },
-      ]).onConflictDoNothing();
-      console.log("✓ Rekening dibuat");
+    await db.insert(schema.accounts).values([
+      // Nibras
+      { id: "a0000000-0000-0000-0000-000000000101", userId: nibrasId, name: "Mandiri", type: "personal", balance: 0, color: "#3B82F6" },
+      { id: "a0000000-0000-0000-0000-000000000102", userId: nibrasId, name: "Tunai", type: "personal", balance: 0, color: "#10B981" },
+      // Zenita
+      { id: "a0000000-0000-0000-0000-000000000201", userId: zenitaId, name: "BRI", type: "personal", balance: 0, color: "#EC4899" },
+      { id: "a0000000-0000-0000-0000-000000000202", userId: zenitaId, name: "Tunai", type: "personal", balance: 0, color: "#10B981" },
+      // Uang Bersama
+      { id: "a0000000-0000-0000-0000-000000000301", userId: bersamaId, name: "SeaBank Tabungan Bersama", type: "shared_savings", balance: 0, color: "#10B981" },
+      { id: "a0000000-0000-0000-0000-000000000302", userId: bersamaId, name: "SeaBank Operasional Bersama", type: "shared_spending", balance: 0, color: "#F59E0B" },
+    ]).onConflictDoUpdate({
+      target: schema.accounts.id,
+      set: {
+        name: sql`EXCLUDED.name`,
+        type: sql`EXCLUDED.type`,
+        color: sql`EXCLUDED.color`
+      }
+    });
+
+    // Safely migrate transaction references to clean IDs
+    try {
+      await db.execute(sql`
+        UPDATE transactions SET account_id = 'a0000000-0000-0000-0000-000000000302' WHERE account_id = '0278caf8-8417-44c3-9f24-073f0d64df25';
+      `);
+      await db.execute(sql`
+        UPDATE transactions SET account_id = 'a0000000-0000-0000-0000-000000000301' WHERE account_id = '7a0f03e5-c385-452b-bf89-e22113df02f1';
+      `);
+      await db.execute(sql`
+        DELETE FROM accounts WHERE id NOT IN (
+          'a0000000-0000-0000-0000-000000000101',
+          'a0000000-0000-0000-0000-000000000102',
+          'a0000000-0000-0000-0000-000000000201',
+          'a0000000-0000-0000-0000-000000000202',
+          'a0000000-0000-0000-0000-000000000301',
+          'a0000000-0000-0000-0000-000000000302'
+        );
+      `);
+    } catch (e) {
+      console.log("Transaction cleanup/migration was skipped or already complete:", e);
     }
+    console.log("✓ Rekening dibuat & diselaraskan");
 
     // 3. Check Categories
-    const existingCategories = await db.select().from(schema.categories);
-    if (existingCategories && existingCategories.length > 0) {
-      console.log("Categories sudah ada");
-    } else {
-      const defaultCats = [
-        // Pemasukan
-        { id: "c0000000-0000-0000-0000-000000000001", name: "Gaji", type: "income", icon: "Briefcase", color: "#10B981" },
-        { id: "c0000000-0000-0000-0000-000000000002", name: "Bonus", type: "income", icon: "TrendingUp", color: "#059669" },
-        { id: "c0000000-0000-0000-0000-000000000003", name: "Lain-lain", type: "income", icon: "Tag", color: "#6B7280" },
-        // Pengeluaran
-        { id: "c0000000-0000-0000-0000-000000000004", name: "Jajan", type: "expense", icon: "ShoppingBag", color: "#EC4899" },
-        { id: "c0000000-0000-0000-0000-000000000005", name: "Makan", type: "expense", icon: "Utensils", color: "#EF4444" },
-        { id: "c0000000-0000-0000-0000-000000000006", name: "Kebutuhan", type: "expense", icon: "Home", color: "#3B82F6" },
-        { id: "c0000000-0000-0000-0000-000000000007", name: "Tabungan", type: "expense", icon: "Target", color: "#8B5CF6" },
-        { id: "c0000000-0000-0000-0000-000000000008", name: "Lain-lain", type: "expense", icon: "Tag", color: "#6B7280" },
-      ];
-      for (const cat of defaultCats) {
-        await db.insert(schema.categories).values({
-          id: cat.id,
-          userId: null,
-          name: cat.name,
-          type: cat.type,
-          icon: cat.icon,
-          color: cat.color,
-        }).onConflictDoNothing();
+    for (const cat of staticCategories) {
+      let userId: string | null = null;
+      if (cat.id.startsWith("c3333333")) {
+        userId = bersamaId;
       }
-      console.log("✓ Kategori dibuat");
+      await db.insert(schema.categories).values({
+        id: cat.id,
+        userId,
+        name: cat.name,
+        type: cat.type,
+        icon: cat.icon,
+        color: cat.color
+      }).onConflictDoUpdate({
+        target: schema.categories.id,
+        set: {
+          name: sql`EXCLUDED.name`,
+          type: sql`EXCLUDED.type`,
+          icon: sql`EXCLUDED.icon`,
+          color: sql`EXCLUDED.color`,
+          user_id: sql`EXCLUDED.user_id`
+        }
+      });
     }
+    console.log("✓ Kategori dibuat");
 
     // 4. Check Goals
     const existingGoals = await db.select().from(schema.savingsGoals);
@@ -509,12 +591,6 @@ function getDb() {
 }
 
 function getTargetUserIds(userId: string): string[] {
-  const nibrasId = "11111111-1111-1111-1111-111111111111";
-  const zenitaId = "22222222-2222-2222-2222-222222222222";
-  const bersamaId = "33333333-3333-3333-3333-333333333333";
-  if (userId === nibrasId || userId === zenitaId || userId === bersamaId) {
-    return [nibrasId, zenitaId, bersamaId];
-  }
   return [userId];
 }
 
@@ -599,200 +675,96 @@ export const dbService = {
   },
 
   // --- FINANCIAL ACCOUNTS ---
+  async syncAccountBalances(db: any): Promise<void> {
+    if (db) {
+      const allAccounts = await db.select().from(schema.accounts);
+      const allTransactions = await db.select().from(schema.transactions);
+      for (const acc of allAccounts) {
+        // Sum incomes
+        const incomes = allTransactions.filter(t => t.accountId === acc.id && t.type === "income");
+        const incomeSum = incomes.reduce((sum, t) => sum + Number(t.amount), 0);
+
+        // Sum expenses
+        const expenses = allTransactions.filter(t => t.accountId === acc.id && t.type === "expense");
+        const expenseSum = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
+
+        // Sum transfers out
+        const transfersOut = allTransactions.filter(t => t.accountId === acc.id && t.type === "transfer");
+        const transfersOutSum = transfersOut.reduce((sum, t) => sum + Number(t.amount), 0);
+
+        // Sum transfers in (only count within the same user profile to prevent double counting cross-profile transfers)
+        const transfersIn = allTransactions.filter(t => t.toAccountId === acc.id && t.type === "transfer" && t.userId === acc.userId);
+        const transfersInSum = transfersIn.reduce((sum, t) => sum + Number(t.amount), 0);
+
+        const calculatedBalance = incomeSum - expenseSum - transfersOutSum + transfersInSum;
+        if (acc.balance !== calculatedBalance) {
+          await db.update(schema.accounts)
+            .set({ balance: calculatedBalance })
+            .where(eq(schema.accounts.id, acc.id));
+        }
+      }
+    } else {
+      // Memory fallback
+      for (const acc of memoryDb.accounts) {
+        // Sum incomes
+        const incomes = memoryDb.transactions.filter(t => t.accountId === acc.id && t.type === "income");
+        const incomeSum = incomes.reduce((sum, t) => sum + Number(t.amount), 0);
+
+        // Sum expenses
+        const expenses = memoryDb.transactions.filter(t => t.accountId === acc.id && t.type === "expense");
+        const expenseSum = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
+
+        // Sum transfers out
+        const transfersOut = memoryDb.transactions.filter(t => t.accountId === acc.id && t.type === "transfer");
+        const transfersOutSum = transfersOut.reduce((sum, t) => sum + Number(t.amount), 0);
+
+        // Sum transfers in (only count within the same user profile to prevent double counting cross-profile transfers)
+        const transfersIn = memoryDb.transactions.filter(t => t.toAccountId === acc.id && t.type === "transfer" && t.userId === acc.userId);
+        const transfersInSum = transfersIn.reduce((sum, t) => sum + Number(t.amount), 0);
+
+        acc.balance = incomeSum - expenseSum - transfersOutSum + transfersInSum;
+      }
+    }
+  },
+
   async getAccounts(userId: string): Promise<Account[]> {
     const db = getDb();
     const nibrasId = "11111111-1111-1111-1111-111111111111";
     const zenitaId = "22222222-2222-2222-2222-222222222222";
     const bersamaId = "33333333-3333-3333-3333-333333333333";
 
+    await this.syncAccountBalances(db);
+
+    let rawAccounts: Account[] = [];
     if (db) {
-      // Check if accounts exist for the active user (profileAktif)
-      const currentProfileAccounts = await db.select().from(schema.accounts).where(eq(schema.accounts.userId, userId));
-      if (currentProfileAccounts.length === 0) {
-        console.log(`No database accounts found for profile ${userId}, creating defaults...`);
-        if (userId === nibrasId) {
-          await db.insert(schema.accounts).values({
-            id: crypto.randomUUID(),
-            userId: nibrasId,
-            name: "Rekening Pribadi",
-            type: "personal",
-            balance: 0,
-            color: "#3B82F6"
-          });
-        } else if (userId === zenitaId) {
-          await db.insert(schema.accounts).values({
-            id: crypto.randomUUID(),
-            userId: zenitaId,
-            name: "Rekening Pribadi",
-            type: "personal",
-            balance: 0,
-            color: "#EC4899"
-          });
-        } else if (userId === bersamaId) {
-          await db.insert(schema.accounts).values([
-            {
-              id: crypto.randomUUID(),
-              userId: bersamaId,
-              name: "SeaBank Tabungan Bersama",
-              type: "shared_savings",
-              balance: 0,
-              color: "#10B981"
-            },
-            {
-              id: crypto.randomUUID(),
-              userId: bersamaId,
-              name: "SeaBank Operasional Bersama",
-              type: "shared_spending",
-              balance: 0,
-              color: "#F59E0B"
-            }
-          ]);
-        }
-      }
-
-      // Query raw accounts
-      const targetIds = getTargetUserIds(userId);
-      const rawAccounts = await db.select().from(schema.accounts).where(inArray(schema.accounts.userId, targetIds));
-
-      // Filter and Map names
-      let filtered: Account[] = [];
-      if (userId === nibrasId) {
-        filtered = rawAccounts.filter(a => a.userId === nibrasId || a.userId === bersamaId);
-      } else if (userId === zenitaId) {
-        filtered = rawAccounts.filter(a => a.userId === zenitaId || a.userId === bersamaId);
-      } else if (userId === bersamaId) {
-        filtered = rawAccounts.filter(a => a.userId === bersamaId);
-      } else {
-        filtered = rawAccounts;
-      }
-
-      return filtered.map(a => {
-        if (userId === nibrasId) {
-          if (a.userId === nibrasId) {
-            return { ...a, name: "Rekening Pribadi Nibras" };
-          }
-          if (a.name.includes("Tabungan")) {
-            return { ...a, name: "SeaBank Tabungan Bersama (Transfer)" };
-          }
-          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
-            return { ...a, name: "SeaBank Operasional Bersama (Transfer)" };
-          }
-        } else if (userId === zenitaId) {
-          if (a.userId === zenitaId) {
-            return { ...a, name: "Rekening Pribadi Zenita" };
-          }
-          if (a.name.includes("Tabungan")) {
-            return { ...a, name: "SeaBank Tabungan Bersama (Transfer)" };
-          }
-          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
-            return { ...a, name: "SeaBank Operasional Bersama (Transfer)" };
-          }
-        } else if (userId === bersamaId) {
-          if (a.name.includes("Tabungan")) {
-            return { ...a, name: "SeaBank Tabungan Bersama" };
-          }
-          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
-            return { ...a, name: "SeaBank Operasional Bersama" };
-          }
-        }
-        return a;
-      });
-
+      rawAccounts = await db.select().from(schema.accounts);
     } else {
-      // Memory Fallback
-      const currentProfileAccountsMemory = memoryDb.accounts.filter(a => a.userId === userId);
-      if (currentProfileAccountsMemory.length === 0) {
-        console.log(`No memory accounts found for profile ${userId}, creating defaults...`);
-        if (userId === nibrasId) {
-          memoryDb.accounts.push({
-            id: "a0000000-0000-0000-0000-000000000101",
-            userId: nibrasId,
-            name: "Rekening Pribadi",
-            type: "personal",
-            balance: 0,
-            color: "#3B82F6",
-            createdAt: new Date()
-          });
-        } else if (userId === zenitaId) {
-          memoryDb.accounts.push({
-            id: "a0000000-0000-0000-0000-000000000201",
-            userId: zenitaId,
-            name: "Rekening Pribadi",
-            type: "personal",
-            balance: 0,
-            color: "#EC4899",
-            createdAt: new Date()
-          });
-        } else if (userId === bersamaId) {
-          memoryDb.accounts.push(
-            {
-              id: "a0000000-0000-0000-0000-000000000301",
-              userId: bersamaId,
-              name: "SeaBank Tabungan Bersama",
-              type: "shared_savings",
-              balance: 0,
-              color: "#10B981",
-              createdAt: new Date()
-            },
-            {
-              id: "a0000000-0000-0000-0000-000000000302",
-              userId: bersamaId,
-              name: "SeaBank Operasional Bersama",
-              type: "shared_spending",
-              balance: 0,
-              color: "#F59E0B",
-              createdAt: new Date()
-            }
-          );
-        }
-      }
-
-      const targetIds = getTargetUserIds(userId);
-      const rawAccounts = memoryDb.accounts.filter((a) => targetIds.includes(a.userId));
-
-      let filtered: Account[] = [];
-      if (userId === nibrasId) {
-        filtered = rawAccounts.filter(a => a.userId === nibrasId || a.userId === bersamaId);
-      } else if (userId === zenitaId) {
-        filtered = rawAccounts.filter(a => a.userId === zenitaId || a.userId === bersamaId);
-      } else if (userId === bersamaId) {
-        filtered = rawAccounts.filter(a => a.userId === bersamaId);
-      } else {
-        filtered = rawAccounts;
-      }
-
-      return filtered.map(a => {
-        if (userId === nibrasId) {
-          if (a.userId === nibrasId) {
-            return { ...a, name: "Rekening Pribadi Nibras" };
-          }
-          if (a.name.includes("Tabungan")) {
-            return { ...a, name: "SeaBank Tabungan Bersama (Transfer)" };
-          }
-          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
-            return { ...a, name: "SeaBank Operasional Bersama (Transfer)" };
-          }
-        } else if (userId === zenitaId) {
-          if (a.userId === zenitaId) {
-            return { ...a, name: "Rekening Pribadi Zenita" };
-          }
-          if (a.name.includes("Tabungan")) {
-            return { ...a, name: "SeaBank Tabungan Bersama (Transfer)" };
-          }
-          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
-            return { ...a, name: "SeaBank Operasional Bersama (Transfer)" };
-          }
-        } else if (userId === bersamaId) {
-          if (a.name.includes("Tabungan")) {
-            return { ...a, name: "SeaBank Tabungan Bersama" };
-          }
-          if (a.name.includes("Jajan") || a.name.includes("Operasional")) {
-            return { ...a, name: "SeaBank Operasional Bersama" };
-          }
-        }
-        return a;
-      });
+      rawAccounts = memoryDb.accounts;
     }
+
+    // Filter accounts strictly belonging to the active profile
+    let filtered = rawAccounts.filter(a => {
+      if (userId === nibrasId) {
+        return a.id === "a0000000-0000-0000-0000-000000000101" || a.id === "a0000000-0000-0000-0000-000000000102";
+      }
+      if (userId === zenitaId) {
+        return a.id === "a0000000-0000-0000-0000-000000000201" || a.id === "a0000000-0000-0000-0000-000000000202";
+      }
+      if (userId === bersamaId) {
+        return a.id === "a0000000-0000-0000-0000-000000000301" || a.id === "a0000000-0000-0000-0000-000000000302";
+      }
+      return a.userId === userId;
+    });
+
+    return filtered.map(a => {
+      if (a.id === "a0000000-0000-0000-0000-000000000101") return { ...a, name: "Mandiri" };
+      if (a.id === "a0000000-0000-0000-0000-000000000102") return { ...a, name: "Tunai" };
+      if (a.id === "a0000000-0000-0000-0000-000000000201") return { ...a, name: "BRI" };
+      if (a.id === "a0000000-0000-0000-0000-000000000202") return { ...a, name: "Tunai" };
+      if (a.id === "a0000000-0000-0000-0000-000000000301") return { ...a, name: "SeaBank Tabungan Bersama" };
+      if (a.id === "a0000000-0000-0000-0000-000000000302") return { ...a, name: "SeaBank Operasional Bersama" };
+      return a;
+    });
   },
 
   async createAccount(acc: { userId: string; name: string; type: string; balance: number; color?: string }): Promise<Account> {
@@ -871,21 +843,35 @@ export const dbService = {
 
   // --- CATEGORIES ---
   async getCategories(userId: string): Promise<Category[]> {
-    const db = getDb();
-    let cats: Category[] = [];
-    if (db) {
-      cats = await db.select().from(schema.categories).where(
-        sql`${schema.categories.userId} = ${userId} OR ${schema.categories.userId} IS NULL`
-      );
-    } else {
-      cats = memoryDb.categories.filter((c) => c.userId === userId || c.userId === null);
+    const nibrasId = "11111111-1111-1111-1111-111111111111";
+    const zenitaId = "22222222-2222-2222-2222-222222222222";
+    const bersamaId = "33333333-3333-3333-3333-333333333333";
+
+    if (userId === nibrasId || userId === zenitaId) {
+      // Show general categories for Nibras/Zenita (starts with c1111111)
+      return staticCategories
+        .filter(c => c.id.startsWith("c1111111"))
+        .map(c => ({
+          ...c,
+          userId: null,
+          createdAt: new Date()
+        }));
+    } else if (userId === bersamaId) {
+      // Show Uang Bersama categories (starts with c3333333)
+      return staticCategories
+        .filter(c => c.id.startsWith("c3333333"))
+        .map(c => ({
+          ...c,
+          userId: bersamaId,
+          createdAt: new Date()
+        }));
     }
-    return cats.map(c => {
-      if (c.name === "Lainnya" || c.name === "Lainnya ") {
-        return { ...c, name: "Lain-lain" };
-      }
-      return c;
-    });
+
+    return staticCategories.map(c => ({
+      ...c,
+      userId: null,
+      createdAt: new Date()
+    }));
   },
 
   async createCategory(cat: { userId: string | null; name: string; type: string; icon?: string; color?: string }): Promise<Category> {
@@ -1024,6 +1010,29 @@ export const dbService = {
     const db = getDb();
     const id = crypto.randomUUID();
     const finalDate = tx.date || new Date();
+
+    // Validate balance and transfer accounts before creating transaction
+    if (tx.type === "expense" || tx.type === "transfer") {
+      let currentBalance = 0;
+      if (db) {
+        const accResult = await db.select().from(schema.accounts).where(eq(schema.accounts.id, tx.accountId));
+        if (accResult.length > 0) {
+          currentBalance = Number(accResult[0].balance);
+        }
+      } else {
+        const acc = memoryDb.accounts.find(a => a.id === tx.accountId);
+        if (acc) {
+          currentBalance = acc.balance;
+        }
+      }
+      if (currentBalance < tx.amount) {
+        throw new Error("Saldo tidak mencukupi untuk melakukan transaksi ini.");
+      }
+    }
+
+    if (tx.type === "transfer" && tx.accountId === tx.toAccountId) {
+      throw new Error("Rekening asal dan tujuan tidak boleh sama.");
+    }
     
     // Check if this is an expense with "Tabungan" category and has a transferToAccountId
     const isTabunganCategory = tx.categoryId === "c0000000-0000-0000-0000-000000000007";
@@ -1048,6 +1057,44 @@ export const dbService = {
       date: finalDate,
       receiptImageUrl: tx.receiptImageUrl || null,
       createdAt: new Date(),
+    };
+
+    // Helper to automatically update Joint Savings Goal balance upon transfers to Tabungan Bersama
+    const adjustJointSavingsGoal = async (amountDelta: number) => {
+      const targetUserId = "33333333-3333-3333-3333-333333333333";
+      if (db) {
+        const goals = await db.select().from(schema.savingsGoals).where(eq(schema.savingsGoals.userId, targetUserId));
+        if (goals.length > 0) {
+          if (amountDelta > 0) {
+            const targetGoal = goals.find(g => g.currentAmount < g.targetAmount) || goals[0];
+            if (targetGoal) {
+              await db.update(schema.savingsGoals)
+                .set({ currentAmount: targetGoal.currentAmount + amountDelta, updatedAt: new Date() })
+                .where(eq(schema.savingsGoals.id, targetGoal.id));
+            }
+          } else if (amountDelta < 0) {
+            const absDelta = Math.abs(amountDelta);
+            const targetGoal = goals.find(g => g.currentAmount > 0) || goals[0];
+            if (targetGoal) {
+              await db.update(schema.savingsGoals)
+                .set({ currentAmount: Math.max(0, targetGoal.currentAmount - absDelta), updatedAt: new Date() })
+                .where(eq(schema.savingsGoals.id, targetGoal.id));
+            }
+          }
+        }
+      } else {
+        const goals = memoryDb.savingsGoals.filter(g => g.userId === targetUserId);
+        if (goals.length > 0) {
+          if (amountDelta > 0) {
+            const targetGoal = goals.find(g => g.currentAmount < g.targetAmount) || goals[0];
+            if (targetGoal) targetGoal.currentAmount += amountDelta;
+          } else if (amountDelta < 0) {
+            const absDelta = Math.abs(amountDelta);
+            const targetGoal = goals.find(g => g.currentAmount > 0) || goals[0];
+            if (targetGoal) targetGoal.currentAmount = Math.max(0, targetGoal.currentAmount - absDelta);
+          }
+        }
+      }
     };
 
     // Update Account balances based on transaction type
@@ -1105,6 +1152,41 @@ export const dbService = {
           date: finalDate,
           receiptImageUrl: tx.receiptImageUrl,
         });
+
+        // Automatically increase Joint Savings Goal balance
+        if (linkedBersamaAccountId === "a0000000-0000-0000-0000-000000000301") {
+          await adjustJointSavingsGoal(tx.amount);
+        }
+      }
+
+      // Handle automatic incoming transaction for recipient profile during cross-profile transfer
+      if (tx.type === "transfer" && tx.toAccountId && (tx.userId === "11111111-1111-1111-1111-111111111111" || tx.userId === "22222222-2222-2222-2222-222222222222")) {
+        const isToBersama = tx.toAccountId === "a0000000-0000-0000-0000-000000000301" || tx.toAccountId === "a0000000-0000-0000-0000-000000000302";
+        if (isToBersama) {
+          const senderName = tx.userId === "11111111-1111-1111-1111-111111111111" ? "Nibras" : "Zenita";
+          const catId = tx.userId === "11111111-1111-1111-1111-111111111111"
+            ? "c3333333-0000-0000-0000-000000000001" // Transfer dari Nibras
+            : "c3333333-0000-0000-0000-000000000002"; // Transfer dari Zenita
+          const linkedId = crypto.randomUUID();
+
+          await db.insert(schema.transactions).values({
+            id: linkedId,
+            userId: "33333333-3333-3333-3333-333333333333", // Bersama
+            accountId: tx.toAccountId,
+            toAccountId: tx.accountId,
+            categoryId: catId,
+            amount: tx.amount,
+            type: "income",
+            description: `[Transfer Masuk] Dari ${senderName}: ${tx.description || "Transfer dana"}`,
+            date: finalDate,
+            receiptImageUrl: tx.receiptImageUrl || null,
+          });
+
+          // Automatically increase Joint Savings Goal balance if transferred to SeaBank Tabungan Bersama
+          if (tx.toAccountId === "a0000000-0000-0000-0000-000000000301") {
+            await adjustJointSavingsGoal(tx.amount);
+          }
+        }
       }
 
       // Handle automatic reimbursement logic
@@ -1155,6 +1237,41 @@ export const dbService = {
         createdAt: new Date(),
       };
       memoryDb.transactions.push(linkedTx);
+
+      if (linkedBersamaAccountId === "a0000000-0000-0000-0000-000000000301") {
+        await adjustJointSavingsGoal(tx.amount);
+      }
+    }
+
+    // Handle automatic incoming transaction for recipient profile during cross-profile transfer in Memory Mode
+    if (tx.type === "transfer" && tx.toAccountId && (tx.userId === "11111111-1111-1111-1111-111111111111" || tx.userId === "22222222-2222-2222-2222-222222222222")) {
+      const isToBersama = tx.toAccountId === "a0000000-0000-0000-0000-000000000301" || tx.toAccountId === "a0000000-0000-0000-0000-000000000302";
+      if (isToBersama) {
+        const senderName = tx.userId === "11111111-1111-1111-1111-111111111111" ? "Nibras" : "Zenita";
+        const catId = tx.userId === "11111111-1111-1111-1111-111111111111"
+          ? "c3333333-0000-0000-0000-000000000001"
+          : "c3333333-0000-0000-0000-000000000002";
+        const linkedId = crypto.randomUUID();
+
+        const linkedTx: Transaction = {
+          id: linkedId,
+          userId: "33333333-3333-3333-3333-333333333333",
+          accountId: tx.toAccountId,
+          toAccountId: tx.accountId,
+          categoryId: catId,
+          amount: tx.amount,
+          type: "income",
+          description: `[Transfer Masuk] Dari ${senderName}: ${tx.description || "Transfer dana"}`,
+          date: finalDate,
+          receiptImageUrl: tx.receiptImageUrl || null,
+          createdAt: new Date(),
+        };
+        memoryDb.transactions.push(linkedTx);
+
+        if (tx.toAccountId === "a0000000-0000-0000-0000-000000000301") {
+          await adjustJointSavingsGoal(tx.amount);
+        }
+      }
     }
 
     // Handle automatic reimbursement logic in Memory Mode
@@ -1208,6 +1325,33 @@ export const dbService = {
       }
     };
 
+    const adjustJointSavingsGoal = async (amountDelta: number) => {
+      const targetUserId = "33333333-3333-3333-3333-333333333333";
+      if (db) {
+        const goals = await db.select().from(schema.savingsGoals).where(eq(schema.savingsGoals.userId, targetUserId));
+        if (goals.length > 0) {
+          if (amountDelta < 0) {
+            const absDelta = Math.abs(amountDelta);
+            const targetGoal = goals.find(g => g.currentAmount > 0) || goals[0];
+            if (targetGoal) {
+              await db.update(schema.savingsGoals)
+                .set({ currentAmount: Math.max(0, targetGoal.currentAmount - absDelta), updatedAt: new Date() })
+                .where(eq(schema.savingsGoals.id, targetGoal.id));
+            }
+          }
+        }
+      } else {
+        const goals = memoryDb.savingsGoals.filter(g => g.userId === targetUserId);
+        if (goals.length > 0) {
+          if (amountDelta < 0) {
+            const absDelta = Math.abs(amountDelta);
+            const targetGoal = goals.find(g => g.currentAmount > 0) || goals[0];
+            if (targetGoal) targetGoal.currentAmount = Math.max(0, targetGoal.currentAmount - absDelta);
+          }
+        }
+      }
+    };
+
     if (tx.type === "income") {
       await adjustBalance(tx.accountId, -tx.amount);
     } else if (tx.type === "expense") {
@@ -1253,6 +1397,14 @@ export const dbService = {
           memoryDb.transactions = memoryDb.transactions.filter(t => t.id !== sibling.id);
         }
       }
+
+      if (tx.toAccountId === "a0000000-0000-0000-0000-000000000301") {
+        await adjustJointSavingsGoal(-tx.amount);
+      }
+    }
+
+    if (tx.type === "transfer" && tx.toAccountId === "a0000000-0000-0000-0000-000000000301") {
+      await adjustJointSavingsGoal(-tx.amount);
     }
 
     if (db) {
@@ -1589,6 +1741,7 @@ export const dbService = {
     bersama: { tabunganBalance: number; operasionalBalance: number; transferIn: number; expense: number };
   }> {
     const db = getDb();
+    await this.syncAccountBalances(db);
     const nibrasId = "11111111-1111-1111-1111-111111111111";
     const zenitaId = "22222222-2222-2222-2222-222222222222";
     const bersamaId = "33333333-3333-3333-3333-333333333333";
@@ -1607,15 +1760,9 @@ export const dbService = {
     // Calculations
     const nibrasAccounts = allAccounts.filter(a => a.userId === nibrasId);
     const nibrasBalance = nibrasAccounts.reduce((sum, a) => sum + a.balance, 0);
-    const nibrasTxs = allTransactions.filter(t => t.userId === nibrasId);
-    const nibrasIncome = nibrasTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
-    const nibrasExpense = nibrasTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
 
     const zenitaAccounts = allAccounts.filter(a => a.userId === zenitaId);
     const zenitaBalance = zenitaAccounts.reduce((sum, a) => sum + a.balance, 0);
-    const zenitaTxs = allTransactions.filter(t => t.userId === zenitaId);
-    const zenitaIncome = zenitaTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
-    const zenitaExpense = zenitaTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
 
     const tabunganAcc = allAccounts.find(a => a.id === "a0000000-0000-0000-0000-000000000301" || a.type === "shared_savings");
     const operasionalAcc = allAccounts.find(a => a.id === "a0000000-0000-0000-0000-000000000302" || a.type === "shared_spending");
@@ -1623,9 +1770,63 @@ export const dbService = {
     const tabunganBalance = tabunganAcc ? tabunganAcc.balance : 0;
     const operasionalBalance = operasionalAcc ? operasionalAcc.balance : 0;
 
-    const bersamaTxs = allTransactions.filter(t => t.userId === bersamaId);
-    const bersamaTransferIn = bersamaTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
-    const bersamaExpense = bersamaTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+    const sharedAccountIds = new Set<string>();
+    if (tabunganAcc) sharedAccountIds.add(tabunganAcc.id);
+    if (operasionalAcc) sharedAccountIds.add(operasionalAcc.id);
+
+    const nibrasAccountIds = new Set(allAccounts.filter(a => a.userId === nibrasId).map(a => a.id));
+    const zenitaAccountIds = new Set(allAccounts.filter(a => a.userId === zenitaId).map(a => a.id));
+
+    // Categorize transactions:
+    // A transaction belongs to Bersama (shared) if its primary account is a shared account,
+    // or if its user_id is the shared user_id, or if it transfers money INTO a shared account.
+    const bersamaTxs = allTransactions.filter(t => 
+      t.userId === bersamaId ||
+      sharedAccountIds.has(t.accountId) ||
+      (t.toAccountId !== null && t.toAccountId !== undefined && sharedAccountIds.has(t.toAccountId))
+    );
+
+    const nibrasTxs = allTransactions.filter(t => 
+      (t.userId === nibrasId || nibrasAccountIds.has(t.accountId)) &&
+      !sharedAccountIds.has(t.accountId) &&
+      !(t.toAccountId !== null && t.toAccountId !== undefined && sharedAccountIds.has(t.toAccountId))
+    );
+
+    const zenitaTxs = allTransactions.filter(t => 
+      (t.userId === zenitaId || zenitaAccountIds.has(t.accountId)) &&
+      !sharedAccountIds.has(t.accountId) &&
+      !(t.toAccountId !== null && t.toAccountId !== undefined && sharedAccountIds.has(t.toAccountId))
+    );
+
+    // Sum personal cashflows
+    const nibrasIncome = nibrasTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+    const nibrasExpense = nibrasTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+
+    const zenitaIncome = zenitaTxs.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+    const zenitaExpense = zenitaTxs.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+
+    // Sum bersama cashflow (inflow and outflow):
+    // Inflow: "income" type directly on a shared account, OR transfer INTO a shared account from a non-shared account.
+    const bersamaTransferIn = bersamaTxs.reduce((sum, t) => {
+      if (sharedAccountIds.has(t.accountId) && t.type === "income") {
+        return sum + t.amount;
+      }
+      if (t.type === "transfer" && t.toAccountId && sharedAccountIds.has(t.toAccountId) && !sharedAccountIds.has(t.accountId)) {
+        return sum + t.amount;
+      }
+      return sum;
+    }, 0);
+
+    // Outflow: "expense" type directly on a shared account, OR transfer OUT of a shared account to a non-shared account.
+    const bersamaExpense = bersamaTxs.reduce((sum, t) => {
+      if (sharedAccountIds.has(t.accountId) && t.type === "expense") {
+        return sum + t.amount;
+      }
+      if (t.type === "transfer" && t.accountId && sharedAccountIds.has(t.accountId) && !sharedAccountIds.has(t.toAccountId || "")) {
+        return sum + t.amount;
+      }
+      return sum;
+    }, 0);
 
     return {
       nibras: { balance: nibrasBalance, income: nibrasIncome, expense: nibrasExpense },
@@ -1639,34 +1840,75 @@ export const dbService = {
     };
   },
 
+  async resetFinancialData(): Promise<{ success: boolean; message: string }> {
+    const db = getDb();
+    if (db) {
+      try {
+        await db.delete(schema.transactions);
+        await db.delete(schema.investmentHistory);
+        await db.delete(schema.investments);
+        await db.delete(schema.budgetItems);
+        await db.delete(schema.budgets);
+        await db.delete(schema.receiptItems);
+        await db.delete(schema.receipts);
+        await db.update(schema.savingsGoals).set({ currentAmount: 0 });
+        await db.update(schema.accounts).set({ balance: 0 });
+        await db.delete(schema.activityLogs);
+        await db.insert(schema.activityLogs).values({
+          id: `log-reset-${Date.now()}`,
+          userId: "33333333-3333-3333-3333-333333333333",
+          action: "RESET_DATA",
+          details: "Semua laporan dan data keuangan berhasil dikosongkan.",
+        });
+      } catch (err) {
+        console.error("Error resetting database financial data:", err);
+      }
+    }
+
+    memoryDb.transactions = [];
+    memoryDb.investments = [];
+    memoryDb.budgets = [];
+    memoryDb.savingsGoals.forEach(g => { g.currentAmount = 0; });
+    memoryDb.accounts.forEach(a => { a.balance = 0; });
+    memoryDb.activityLogs = [{
+      id: `log-reset-${Date.now()}`,
+      userId: "33333333-3333-3333-3333-333333333333",
+      action: "RESET_DATA",
+      details: "Semua laporan dan data keuangan berhasil dikosongkan.",
+      createdAt: new Date()
+    }];
+
+    return { success: true, message: "Semua laporan dan data keuangan telah berhasil dikosongkan." };
+  },
+
   async initializeDatabaseSchema(): Promise<{ success: boolean; log: string }> {
     const db = getDb();
     if (!db) {
       return { 
         success: false, 
-        log: "DATABASE_URL tidak ditemui. Sila pastikan anda telah memasukkan pembolehubah persekitaran (environment variable) DATABASE_URL di panel Secrets AI Studio." 
+        log: "DATABASE_URL tidak ditemukan. Pastikan Anda telah memasukkan variabel lingkungan (environment variable) DATABASE_URL di panel Secrets AI Studio." 
       };
     }
     
-    let logOutput = "Menyambung ke pangkalan data Supabase...\n";
+    let logOutput = "Menghubungkan ke basis data Supabase...\n";
     try {
       for (const statement of DDL_STATEMENTS) {
         const tableNameMatch = statement.match(/IF NOT EXISTS\s+(\w+)/i);
-        const tableName = tableNameMatch ? tableNameMatch[1] : "jadual";
-        logOutput += `Membina/mengesahkan jadual '${tableName}'... `;
+        const tableName = tableNameMatch ? tableNameMatch[1] : "tabel";
+        logOutput += `Membuat/memverifikasi tabel '${tableName}'... `;
         await db.execute(sql.raw(statement));
         logOutput += "OK\n";
       }
       
-      logOutput += "Semua jadual berjaya dicipta atau disahkan di Supabase!\n";
-      logOutput += "Menjalankan penyemaian data permulaan (seeding)...\n";
+      logOutput += "Semua tabel berhasil dibuat atau diverifikasi di Supabase!\n";
+      logOutput += "Menjalankan seeding data awal...\n";
       await seedDb(db);
-      logOutput += "Penyemaian data permulaan berjaya diselesaikan!\n";
+      logOutput += "Seeding data awal berhasil diselesaikan!\n";
       schemaInitialized = true;
       return { success: true, log: logOutput };
     } catch (err: any) {
       console.error("Manual database init failed:", err);
-      logOutput += `\nRALAT KETIKA MIGRASI: ${err.message || err}\nSila periksa sambungan atau keizinan pangkalan data Supabase anda.`;
+      logOutput += `\nERROR SAAT MIGRASI: ${err.message || err}\nSilakan periksa koneksi atau hak akses basis data Supabase Anda.`;
       return { success: false, log: logOutput };
     }
   }

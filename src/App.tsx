@@ -181,7 +181,7 @@ export default function App() {
     try {
       await api.createAccount(acc);
       await fetchAllData();
-      showToast(`Akaun "${acc.name}" berjaya disimpan!`, "success");
+      showToast(`Rekening "${acc.name}" berhasil disimpan!`, "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -191,7 +191,7 @@ export default function App() {
     try {
       await api.updateAccount(id, acc);
       await fetchAllData();
-      showToast("Maklumat akaun dikemaskini!", "success");
+      showToast("Informasi rekening diperbarui!", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -201,7 +201,7 @@ export default function App() {
     try {
       await api.deleteAccount(id);
       await fetchAllData();
-      showToast("Akaun berjaya dipadamkan.", "success");
+      showToast("Rekening berhasil dihapus.", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -230,7 +230,7 @@ export default function App() {
         receiptImageUrl: null
       });
       await fetchAllData();
-      showToast("Pindahan baki berjaya diproses!", "success");
+      showToast("Transfer saldo berhasil diproses!", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -241,7 +241,7 @@ export default function App() {
     try {
       await api.createTransaction(tx);
       await fetchAllData();
-      showToast("Transaksi kewangan berjaya direkodkan!", "success");
+      showToast("Transaksi keuangan berhasil dicatat!", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -251,7 +251,7 @@ export default function App() {
     try {
       await api.deleteTransaction(id);
       await fetchAllData();
-      showToast("Transaksi dikeluarkan dan baki akaun dikemaskini.", "success");
+      showToast("Transaksi dihapus dan saldo rekening diperbarui.", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -262,7 +262,7 @@ export default function App() {
     try {
       await api.createCategory(cat);
       await fetchAllData();
-      showToast(`Kategori "${cat.name}" berjaya ditambah!`, "success");
+      showToast(`Kategori "${cat.name}" berhasil ditambahkan!`, "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -272,7 +272,7 @@ export default function App() {
     try {
       await api.updateCategory(id, cat);
       await fetchAllData();
-      showToast("Kategori berjaya dikemaskini.", "success");
+      showToast("Kategori berhasil diperbarui.", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -282,7 +282,7 @@ export default function App() {
     try {
       await api.deleteCategory(id);
       await fetchAllData();
-      showToast("Kategori berjaya dipadamkan.", "success");
+      showToast("Kategori berhasil dihapus.", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -293,7 +293,7 @@ export default function App() {
     try {
       await api.createOrUpdateBudget({ categoryId, amount, month });
       await fetchAllData();
-      showToast("Had siling bajet dikemaskini!", "success");
+      showToast("Batas anggaran diperbarui!", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -304,7 +304,7 @@ export default function App() {
     try {
       await api.createSavingsGoal(goal);
       await fetchAllData();
-      showToast(`Sasaran "${goal.name}" berjaya ditetapkan!`, "success");
+      showToast(`Target "${goal.name}" berhasil ditetapkan!`, "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -314,7 +314,7 @@ export default function App() {
     try {
       await api.updateSavingsGoal(id, goal);
       await fetchAllData();
-      showToast("Progress sasaran simpanan dikemaskini!", "success");
+      showToast("Progres target tabungan diperbarui!", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -324,7 +324,7 @@ export default function App() {
     try {
       await api.deleteSavingsGoal(id);
       await fetchAllData();
-      showToast("Matlamat simpanan dipadam.", "success");
+      showToast("Target tabungan dihapus.", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -335,7 +335,7 @@ export default function App() {
     try {
       await api.createInvestment(inv);
       await fetchAllData();
-      showToast(`Aset pelaburan "${inv.name}" disimpan!`, "success");
+      showToast(`Aset investasi "${inv.name}" berhasil disimpan!`, "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -345,7 +345,7 @@ export default function App() {
     try {
       await api.updateInvestment(id, inv);
       await fetchAllData();
-      showToast("Nilai pasaran portfolio dikemaskini!", "success");
+      showToast("Nilai pasar portofolio diperbarui!", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -355,7 +355,7 @@ export default function App() {
     try {
       await api.deleteInvestment(id);
       await fetchAllData();
-      showToast("Rekod pelaburan dikeluarkan.", "success");
+      showToast("Catatan investasi berhasil dihapus.", "success");
     } catch (err: any) {
       showToast(err.message, "error");
     }
@@ -366,9 +366,9 @@ export default function App() {
     try {
       const res = await api.refreshInvestments();
       await fetchAllData();
-      showToast(`Berjaya mengemas kini harga pasaran bagi ${res.updatedCount} aset aktif melalui AI Gemini!`, "success");
+      showToast(`Berhasil memperbarui harga pasar untuk ${res.updatedCount} aset aktif melalui AI Gemini!`, "success");
     } catch (err: any) {
-      showToast("Gagal mengemas kini harga pelaburan: " + (err.message || err), "error");
+      showToast("Gagal memperbarui harga investasi: " + (err.message || err), "error");
     } finally {
       setLoading(false);
     }
@@ -555,7 +555,7 @@ export default function App() {
                   Menu Tambahan KitaPunya
                 </h2>
                 <p className="text-xs text-zinc-400 font-medium">
-                  Urus akaun, kategori, had siling bajet, pelaburan, dan lihat log aktiviti profil anda.
+                  Kelola rekening, kategori, batas anggaran, investasi, dan lihat log aktivitas profil Anda.
                 </p>
               </div>
 
@@ -568,8 +568,8 @@ export default function App() {
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/20 text-blue-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
                     <CreditCard size={24} />
                   </div>
-                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Akaun Kewangan</span>
-                  <span className="text-[10px] text-zinc-400 mt-1">Urus baki & pindahan</span>
+                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Rekening Keuangan</span>
+                  <span className="text-[10px] text-zinc-400 mt-1">Kelola saldo & transfer</span>
                 </button>
 
                 {/* Budgets Card */}
@@ -580,8 +580,8 @@ export default function App() {
                   <div className="p-4 bg-pink-50 dark:bg-pink-950/20 text-pink-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
                     <PieChart size={24} />
                   </div>
-                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Had Siling Bajet</span>
-                  <span className="text-[10px] text-zinc-400 mt-1">Sediakan had perbelanjaan</span>
+                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Batas Anggaran</span>
+                  <span className="text-[10px] text-zinc-400 mt-1">Atur batas pengeluaran</span>
                 </button>
 
                 {/* Categories Card */}
@@ -604,8 +604,8 @@ export default function App() {
                   <div className="p-4 bg-amber-50 dark:bg-amber-950/20 text-amber-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
                     <TrendingUp size={24} />
                   </div>
-                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Aset Pelaburan</span>
-                  <span className="text-[10px] text-zinc-400 mt-1">Prestasi saham & logam</span>
+                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Aset Investasi</span>
+                  <span className="text-[10px] text-zinc-400 mt-1">Kinerja saham & logam mulia</span>
                 </button>
 
                 {/* Gallery Card */}
@@ -616,8 +616,8 @@ export default function App() {
                   <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
                     <Image size={24} />
                   </div>
-                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Galeri Resit</span>
-                  <span className="text-[10px] text-zinc-400 mt-1">Arkib resit perbelanjaan</span>
+                  <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Galeri Struk</span>
+                  <span className="text-[10px] text-zinc-400 mt-1">Arsip struk belanja</span>
                 </button>
 
                 {/* Logs Card */}

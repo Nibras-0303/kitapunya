@@ -141,7 +141,7 @@ apiRouter.get("/accounts", requireProfile, async (req: Request, res: Response) =
     const accounts = await dbService.getAccounts(userId);
     res.json({ accounts });
   } catch (err) {
-    res.status(500).json({ error: "Gagal mendapatkan senarai akaun." });
+    res.status(500).json({ error: "Gagal mendapatkan daftar rekening." });
   }
 });
 
@@ -150,7 +150,7 @@ apiRouter.post("/accounts", requireProfile, async (req: Request, res: Response) 
     const userId = req.user!.id;
     const { name, type, balance, color } = req.body;
     if (!name || !type) {
-      return res.status(400).json({ error: "Nama akaun dan jenis akaun diperlukan." });
+      return res.status(400).json({ error: "Nama rekening dan jenis rekening diperlukan." });
     }
 
     const newAcc = await dbService.createAccount({
@@ -161,10 +161,10 @@ apiRouter.post("/accounts", requireProfile, async (req: Request, res: Response) 
       color,
     });
 
-    await dbService.addActivityLog(userId, "ADD_ACCOUNT", `Menambah akaun baru: ${name}`);
+    await dbService.addActivityLog(userId, "ADD_ACCOUNT", `Menambahkan rekening baru: ${name}`);
     res.status(201).json({ account: newAcc });
   } catch (err) {
-    res.status(500).json({ error: "Gagal mencipta akaun baru." });
+    res.status(500).json({ error: "Gagal membuat rekening baru." });
   }
 });
 
@@ -182,13 +182,13 @@ apiRouter.put("/accounts/:id", requireProfile, async (req: Request, res: Respons
     });
 
     if (!updated) {
-      return res.status(404).json({ error: "Akaun tidak ditemui." });
+      return res.status(404).json({ error: "Rekening tidak ditemukan." });
     }
 
-    await dbService.addActivityLog(userId, "UPDATE_ACCOUNT", `Mengemaskini akaun: ${name || updated.name}`);
+    await dbService.addActivityLog(userId, "UPDATE_ACCOUNT", `Memperbarui rekening: ${name || updated.name}`);
     res.json({ account: updated });
   } catch (err) {
-    res.status(500).json({ error: "Gagal mengemaskini akaun." });
+    res.status(500).json({ error: "Gagal memperbarui rekening." });
   }
 });
 
@@ -199,13 +199,13 @@ apiRouter.delete("/accounts/:id", requireProfile, async (req: Request, res: Resp
 
     const success = await dbService.deleteAccount(id);
     if (!success) {
-      return res.status(404).json({ error: "Akaun tidak ditemui." });
+      return res.status(404).json({ error: "Rekening tidak ditemukan." });
     }
 
-    await dbService.addActivityLog(userId, "DELETE_ACCOUNT", `Memadam akaun dengan ID: ${id}`);
+    await dbService.addActivityLog(userId, "DELETE_ACCOUNT", `Menghapus rekening dengan ID: ${id}`);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: "Gagal memadam akaun." });
+    res.status(500).json({ error: "Gagal menghapus rekening." });
   }
 });
 
@@ -213,10 +213,10 @@ apiRouter.post("/accounts/reset-balances", requireProfile, async (req: Request, 
   try {
     const userId = req.user!.id;
     await dbService.resetBalances(userId);
-    await dbService.addActivityLog(userId, "RESET_BALANCES", "Me-reset semua baki akaun keuangan ke 0");
+    await dbService.addActivityLog(userId, "RESET_BALANCES", "Mereset semua saldo rekening keuangan ke 0");
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: "Gagal me-reset semua baki akaun." });
+    res.status(500).json({ error: "Gagal mereset semua saldo rekening." });
   }
 });
 
@@ -305,7 +305,7 @@ apiRouter.get("/transactions", requireProfile, async (req: Request, res: Respons
     const transactions = await dbService.getTransactions(userId, filters);
     res.json({ transactions });
   } catch (err) {
-    res.status(500).json({ error: "Gagal mengambil senarai transaksi." });
+    res.status(500).json({ error: "Gagal mengambil daftar transaksi." });
   }
 });
 
@@ -315,7 +315,7 @@ apiRouter.post("/transactions", requireProfile, async (req: Request, res: Respon
     const { accountId, toAccountId, categoryId, amount, type, description, date, receiptImageUrl, transferToAccountId, paidBy, reimburse } = req.body;
 
     if (!accountId || !amount || !type) {
-      return res.status(400).json({ error: "Akaun, jumlah, dan jenis transaksi diperlukan." });
+      return res.status(400).json({ error: "Rekening, jumlah, dan jenis transaksi diperlukan." });
     }
 
     const newTx = await dbService.createTransaction({
@@ -367,7 +367,7 @@ apiRouter.get("/budgets", requireProfile, async (req: Request, res: Response) =>
     const budgets = await dbService.getBudgets(userId, month);
     res.json({ budgets });
   } catch (err) {
-    res.status(500).json({ error: "Gagal mengambil senarai bajet bulanan." });
+    res.status(500).json({ error: "Gagal mengambil daftar anggaran bulanan." });
   }
 });
 
@@ -476,7 +476,7 @@ apiRouter.get("/investments", requireProfile, async (req: Request, res: Response
     const investments = await dbService.getInvestments(userId);
     res.json({ investments });
   } catch (err) {
-    res.status(500).json({ error: "Gagal mendapatkan senarai pelaburan." });
+    res.status(500).json({ error: "Gagal mendapatkan daftar investasi." });
   }
 });
 
@@ -497,7 +497,7 @@ apiRouter.post("/investments", requireProfile, async (req: Request, res: Respons
     } = req.body;
 
     if (!name || !type || buyPrice === undefined || currentValue === undefined) {
-      return res.status(400).json({ error: "Nama, jenis, harga beli, dan nilai semasa pelaburan diperlukan." });
+      return res.status(400).json({ error: "Nama, jenis, harga beli, dan nilai saat ini investasi diperlukan." });
     }
 
     const priceBought = Number(buyPrice);
@@ -533,11 +533,11 @@ apiRouter.post("/investments", requireProfile, async (req: Request, res: Respons
       });
     }
 
-    await dbService.addActivityLog(userId, "ADD_INVESTMENT", `Menambah pelaburan baru: ${name}`);
+    await dbService.addActivityLog(userId, "ADD_INVESTMENT", `Menambah investasi baru: ${name}`);
     res.status(201).json({ investment: newInv });
   } catch (err: any) {
     console.error("Add investment error:", err);
-    res.status(500).json({ error: "Gagal menambah pelaburan." });
+    res.status(500).json({ error: "Gagal menambah investasi." });
   }
 });
 
@@ -566,14 +566,14 @@ apiRouter.post("/investments/refresh", requireProfile, async (req: Request, res:
         });
 
         const promptText = `
-          Anda adalah sistem penganalisis pasaran kewangan Indonesia/Malaysia untuk aplikasi KitaPunya.
-          Berikut adalah senarai aset pelaburan aktif pengguna:
+          Anda adalah sistem penganalisis pasar keuangan Indonesia untuk aplikasi KitaPunya.
+          Berikut adalah daftar aset investasi aktif pengguna:
           ${JSON.stringify(activeInvestments.map(i => ({ id: i.id, name: i.name, type: i.type, buyPrice: i.buyPrice, currentPrice: i.currentPrice, shares: i.shares })))}
           
-          Sila kemas kini harga seunit semasa (currentPrice) bagi setiap aset tersebut berdasarkan harga sebenar pasaran terkini di Indonesia (contohnya Emas Antam sekitar Rp 1,300,000 - Rp 1,400,000 per gram, saham IHSG terkini, reksadana, dll.).
-          Jika nama aset tidak dikenali, sila jana turun naik harga yang logik dan realistik (sekitar -2% hingga +3% dari harga semasa terakhir).
+          Silakan perbarui harga per unit saat ini (currentPrice) untuk setiap aset tersebut berdasarkan harga aktual pasar terbaru di Indonesia (misalnya Emas Antam sekitar Rp1.300.000 - Rp1.400.000 per gram, saham IHSG terbaru, reksadana, dll.).
+          Jika nama aset tidak dikenal, silakan buat fluktuasi harga yang logis dan realistis (sekitar -2% hingga +3% dari harga saat ini terakhir).
           
-          PULANGKAN HASIL DALAM FORMAT JSON SAHAJA yang mematuhi skema berikut tanpa sebarang teks markdown di luar atau di dalam respons:
+          KEMBALIKAN HASIL DALAM FORMAT JSON SAJA yang mematuhi skema berikut tanpa teks markdown apa pun di luar atau di dalam respons:
           {
             "updates": [
               {
@@ -653,7 +653,7 @@ apiRouter.post("/investments/refresh", requireProfile, async (req: Request, res:
     }
 
     const updatedInvestments = await dbService.getInvestments(userId);
-    await dbService.addActivityLog(userId, "REFRESH_INVESTMENTS", `Mengemas kini harga pelaburan secara automatik.`);
+    await dbService.addActivityLog(userId, "REFRESH_INVESTMENTS", `Memperbarui harga investasi secara otomatis.`);
 
     res.json({
       success: true,
@@ -663,7 +663,7 @@ apiRouter.post("/investments/refresh", requireProfile, async (req: Request, res:
     });
   } catch (err: any) {
     console.error("Refresh Investments API Error:", err);
-    res.status(500).json({ error: "Gagal mengemas kini harga pelaburan: " + (err.message || err) });
+    res.status(500).json({ error: "Gagal memperbarui harga investasi: " + (err.message || err) });
   }
 });
 
@@ -687,7 +687,7 @@ apiRouter.put("/investments/:id", requireProfile, async (req: Request, res: Resp
     // Get existing investment first to check state changes (like selling)
     const existing = await dbService.getInvestment(id);
     if (!existing) {
-      return res.status(404).json({ error: "Pelaburan tidak ditemui." });
+      return res.status(404).json({ error: "Investasi tidak ditemukan." });
     }
 
     const updated = await dbService.updateInvestment(id, {
@@ -704,7 +704,7 @@ apiRouter.put("/investments/:id", requireProfile, async (req: Request, res: Resp
     });
 
     if (!updated) {
-      return res.status(404).json({ error: "Pelaburan tidak ditemui." });
+      return res.status(404).json({ error: "Investasi tidak ditemukan." });
     }
 
     // Handle selling refund logic
@@ -724,11 +724,11 @@ apiRouter.put("/investments/:id", requireProfile, async (req: Request, res: Resp
       }
     }
 
-    await dbService.addActivityLog(userId, "UPDATE_INVESTMENT", `Mengemaskini pelaburan: ${name || updated.name}`);
+    await dbService.addActivityLog(userId, "UPDATE_INVESTMENT", `Memperbarui investasi: ${name || updated.name}`);
     res.json({ investment: updated });
   } catch (err) {
     console.error("Update investment error:", err);
-    res.status(500).json({ error: "Gagal mengemaskini pelaburan." });
+    res.status(500).json({ error: "Gagal memperbarui investasi." });
   }
 });
 
@@ -739,13 +739,13 @@ apiRouter.delete("/investments/:id", requireProfile, async (req: Request, res: R
 
     const success = await dbService.deleteInvestment(id);
     if (!success) {
-      return res.status(404).json({ error: "Pelaburan tidak ditemui." });
+      return res.status(404).json({ error: "Investasi tidak ditemukan." });
     }
 
-    await dbService.addActivityLog(userId, "DELETE_INVESTMENT", `Memadam pelaburan ID: ${id}`);
+    await dbService.addActivityLog(userId, "DELETE_INVESTMENT", `Menghapus investasi ID: ${id}`);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: "Gagal memadam pelaburan." });
+    res.status(500).json({ error: "Gagal menghapus investasi." });
   }
 });
 
@@ -788,7 +788,7 @@ apiRouter.get("/admin/users", requireAdmin, async (req: Request, res: Response) 
     const users = await dbService.getUsers();
     res.json({ users });
   } catch (err) {
-    res.status(500).json({ error: "Gagal mengambil senarai pengguna." });
+    res.status(500).json({ error: "Gagal mengambil daftar pengguna." });
   }
 });
 
@@ -861,21 +861,21 @@ apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Respon
     };
 
     const promptText = `
-      Anda adalah pakar pengecaman resit/nota dengan fokus utama pada kejituan amaun nominal transaksi. Sila lakukan analisis dalam 3 tahap berikut:
+      Anda adalah ahli pengenalan struk/nota dengan fokus utama pada akurasi nominal transaksi. Silakan lakukan analisis dalam 3 tahap berikut:
 
       TAHAP 1: EKSTRAK OCR PENUH (RESOLUSI PENUH)
-      Baca dan ekstrak seluruh teks yang terdapat pada gambar resit ini tanpa melangkau apa-apa teks. Letakkan hasil transkripsi penuh ini dalam medan "rawOcrText".
+      Baca dan ekstrak seluruh teks yang terdapat pada gambar struk ini tanpa melewatkan teks apa pun. Letakkan hasil transkripsi lengkap ini pada field "rawOcrText".
 
-      TAHAP 2: PARSING MAKLUMAT BERSTRUKTUR
-      Daripada teks OCR di Tahap 1, kenal pasti dan ambil maklumat berikut:
-      - Merchant (Nama kedai/perniagaan)
-      - Tanggal (Tarikh dalam format YYYY-MM-DD, jika tiada sila gunakan tarikh hari ini)
-      - Jam (Waktu dalam format HH:MM jika ada, jika tiada letakkan null)
-      - Daftar barang (Senarai barangan yang dibeli dengan kuantiti dan harga masing-masing jika ada)
-      - Total pembayaran (Amaun keseluruhan)
+      TAHAP 2: PARSING INFORMASI BERSTRUKTUR
+      Dari teks OCR di Tahap 1, identifikasi dan ambil informasi berikut:
+      - Merchant (Nama toko/usaha)
+      - Tanggal (Tanggal dalam format YYYY-MM-DD, jika tidak ada silakan gunakan tanggal hari ini)
+      - Jam (Waktu dalam format HH:MM jika ada, jika tidak ada letakkan null)
+      - Daftar barang (Daftar barang yang dibeli dengan kuantitas dan harga masing-masing jika ada)
+      - Total pembayaran (Jumlah keseluruhan)
 
       TAHAP 3: VALIDASI NOMINAL (TERPENTING)
-      Sila cari angka nominal transaksi selepas kata kunci berikut (tidak sensitif huruf besar/kecil):
+      Silakan cari angka nominal transaksi setelah kata kunci berikut (tidak sensitif huruf besar/kecil):
       - TOTAL
       - TOTAL BELANJA
       - TOTAL BAYAR
@@ -885,15 +885,15 @@ apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Respon
       - AMOUNT
       - TOTAL CASH
 
-      Peraturan ketat untuk Tahap 3:
-      1. Jika terdapat lebih daripada satu angka, pilih angka yang kedudukannya paling hampir selepas kata "TOTAL" atau variasi kata kunci di atas.
-      2. Jika terdapat pecahan seperti Subtotal, Pajak/Tax, PPN, Diskon/Discount, dan TOTAL, anda WAJIB menggunakan nilai TOTAL akhir sebagai nominal transaksi.
-      3. Nominal ini WAJIB disimpan sebagai nombor/angka murni sahaja TANPA sebarang format (tanpa titik, koma, atau simbol mata wang). Contoh: "Rp126.500" mesti disimpan sebagai 126500.
-      4. Tentukan tahap keyakinan (confidence level) dari 0 hingga 100 peratus untuk ketepatan pembacaan nominal transaksi ini. Sekiranya terdapat sebarang kekaburan, ketiadaan label yang jelas, atau angka yang kurang jelas, berikan nilai di bawah 90%. Jika sangat jelas dan tepat, berikan 95% - 100%.
+      Aturan ketat untuk Tahap 3:
+      1. Jika terdapat lebih dari satu angka, pilih angka yang posisinya paling dekat setelah kata "TOTAL" atau variasi kata kunci di atas.
+      2. Jika terdapat rincian seperti Subtotal, Pajak/Tax, PPN, Diskon/Discount, dan TOTAL, Anda WAJIB menggunakan nilai TOTAL akhir sebagai nominal transaksi.
+      3. Nominal ini WAJIB disimpan sebagai angka murni saja TANPA format apa pun (tanpa titik, koma, atau simbol mata uang). Contoh: "Rp126.500" harus disimpan sebagai 126500.
+      4. Tentukan tingkat keyakinan (confidence level) dari 0 hingga 100 persen untuk ketepatan pembacaan nominal transaksi ini. Jika terdapat ketidakjelasan, ketiadaan label yang jelas, atau angka yang kurang terbaca, berikan nilai di bawah 90%. Jika sangat jelas dan akurat, berikan 95% - 100%.
 
-      Sila pilih juga Kategori perbelanjaan yang paling sesuai daripada senarai ini: 'Makanan & Minuman', 'Transportasi', 'Hiburan & Rekreasi', 'Investasi & Tabungan', 'Belanja Bulanan', atau 'Lain-lain'.
+      Silakan pilih juga Kategori pengeluaran yang paling sesuai dari daftar ini: 'Makanan & Minuman', 'Transportasi', 'Hiburan & Rekreasi', 'Investasi & Tabungan', 'Belanja Bulanan', atau 'Lain-lain'.
 
-      Kembalikan hasil analisis ini dalam format JSON sahaja mengikut skema yang ditetapkan.
+      Kembalikan hasil analisis ini dalam format JSON saja sesuai skema yang ditetapkan.
     `;
 
     const response = await ai.models.generateContent({
@@ -905,24 +905,24 @@ apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Respon
           type: Type.OBJECT,
           properties: {
             rawOcrText: { type: Type.STRING, description: "Seluruh hasil pembacaan teks OCR dari gambar (Tahap 1)" },
-            merchant: { type: Type.STRING, description: "Nama kedai atau merchant (Tahap 2)" },
-            date: { type: Type.STRING, description: "Tarikh transaksi dalam format YYYY-MM-DD (Tahap 2)" },
-            time: { type: Type.STRING, description: "Waktu transaksi dalam format HH:MM jika ada, jika tiada gunakan null (Tahap 2)" },
-            categoryName: { type: Type.STRING, description: "Nama kategori terpilih daripada senarai yang diberikan" },
+            merchant: { type: Type.STRING, description: "Nama toko atau merchant (Tahap 2)" },
+            date: { type: Type.STRING, description: "Tanggal transaksi dalam format YYYY-MM-DD (Tahap 2)" },
+            time: { type: Type.STRING, description: "Waktu transaksi dalam format HH:MM jika ada, jika tidak ada gunakan null (Tahap 2)" },
+            categoryName: { type: Type.STRING, description: "Nama kategori terpilih dari daftar yang diberikan" },
             items: {
               type: Type.ARRAY,
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  name: { type: Type.STRING, description: "Nama barangan" },
-                  qty: { type: Type.NUMBER, description: "Kuantiti barangan" },
-                  price: { type: Type.NUMBER, description: "Harga seunit atau harga barangan" }
+                  name: { type: Type.STRING, description: "Nama barang" },
+                  qty: { type: Type.NUMBER, description: "Kuantitas barang" },
+                  price: { type: Type.NUMBER, description: "Harga per unit atau harga barang" }
                 }
               },
               description: "Daftar barang (Tahap 2)"
             },
             totalAmount: { type: Type.NUMBER, description: "Nominal transaksi murni berupa angka tanpa format, dihitung berdasarkan validasi Tahap 3" },
-            confidence: { type: Type.NUMBER, description: "Tahap keyakinan kejituan nominal dalam peratusan 0-100" }
+            confidence: { type: Type.NUMBER, description: "Tingkat keyakinan akurasi nominal dalam persentase 0-100" }
           },
           required: ["rawOcrText", "merchant", "date", "categoryName", "totalAmount", "confidence"],
         },
@@ -936,7 +936,7 @@ apiRouter.post("/scan-receipt", requireProfile, async (req: Request, res: Respon
 
     const parsedResult = JSON.parse(responseText.trim());
 
-    await dbService.addActivityLog(userId, "AI_SCAN_RECEIPT", `Berjaya menganalisis resit via Gemini AI: ${parsedResult.merchant || parsedResult.categoryName} dengan nominal ${parsedResult.totalAmount} (Confidence: ${parsedResult.confidence}%)`);
+    await dbService.addActivityLog(userId, "AI_SCAN_RECEIPT", `Berhasil menganalisis struk via Gemini AI: ${parsedResult.merchant || parsedResult.categoryName} dengan nominal ${parsedResult.totalAmount} (Confidence: ${parsedResult.confidence}%)`);
 
     res.json({
       success: true,
@@ -955,7 +955,18 @@ apiRouter.get("/reports/partner", requireProfile, async (req: Request, res: Resp
     res.json({ report });
   } catch (err: any) {
     console.error("Partner report API error:", err);
-    res.status(500).json({ error: "Gagal memproses laporan kewangan pasangan: " + err.message });
+    res.status(500).json({ error: "Gagal memproses laporan keuangan: " + err.message });
+  }
+});
+
+// --- RESET DATA ENDPOINT ---
+apiRouter.post("/reset-data", async (req: Request, res: Response) => {
+  try {
+    const result = await dbService.resetFinancialData();
+    res.json(result);
+  } catch (err: any) {
+    console.error("Reset data API error:", err);
+    res.status(500).json({ error: "Gagal mengosongkan data: " + err.message });
   }
 });
 

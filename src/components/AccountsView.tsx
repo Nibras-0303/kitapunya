@@ -47,7 +47,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [fromAccountId, setFromAccountId] = useState("");
   const [toAccountId, setToAccountId] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
-  const [transferDesc, setTransferDesc] = useState("Pindahan baki akaun");
+  const [transferDesc, setTransferDesc] = useState("Transfer saldo rekening");
 
   const colors = [
     "#3B82F6", // Blue
@@ -87,13 +87,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
   const handleOpenTransfer = () => {
     if (accounts.length < 2) {
-      alert("Anda memerlukan sekurang-kurangnya 2 akaun untuk melakukan pindahan baki.");
+      alert("Anda memerlukan setidaknya 2 rekening untuk melakukan transfer saldo.");
       return;
     }
     setFromAccountId(accounts[0].id);
     setToAccountId(accounts[1].id);
     setTransferAmount("");
-    setTransferDesc("Pindahan baki akaun");
+    setTransferDesc("Transfer saldo rekening");
     setIsTransferModalOpen(true);
   };
 
@@ -125,18 +125,18 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     e.preventDefault();
     const amount = Number(transferAmount);
     if (!fromAccountId || !toAccountId || isNaN(amount) || amount <= 0) {
-      alert("Sila masukkan nilai jumlah yang betul.");
+      alert("Silakan masukkan jumlah nominal yang benar.");
       return;
     }
 
     if (fromAccountId === toAccountId) {
-      alert("Akaun sumber dan akaun destinasi tidak boleh sama.");
+      alert("Rekening sumber dan rekening tujuan tidak boleh sama.");
       return;
     }
 
     const sourceAcc = accounts.find(a => a.id === fromAccountId);
     if (sourceAcc && sourceAcc.balance < amount) {
-      alert("Baki akaun sumber tidak mencukupi.");
+      alert("Saldo rekening sumber tidak mencukupi.");
       return;
     }
 
@@ -150,10 +150,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
-            Urus Akaun Keuangan
+            Kelola Rekening Keuangan
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold mt-1">
-            Urus baki akaun bank, e-dompet, simpanan dan tunai harian anda secara bersepadu.
+            Kelola saldo rekening bank, dompet digital, tabungan, dan tunai harian Anda secara terpadu.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -161,7 +161,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             <button
               id="acc-reset-btn"
               onClick={() => {
-                if (confirm("Adakah anda pasti mahu set semula (reset) semua baki akaun kepada 0?")) {
+                if (confirm("Apakah Anda yakin ingin mengatur ulang (reset) semua saldo rekening menjadi 0?")) {
                   onResetBalances();
                 }
               }}
@@ -177,7 +177,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold text-xs rounded-2xl transition-all"
           >
             <ArrowRightLeft size={16} />
-            Pindahan Baki
+            Transfer Saldo
           </button>
           <button
             id="acc-add-btn"
@@ -185,7 +185,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl transition-all shadow-md active:scale-95"
           >
             <Plus size={16} />
-            Tambah Akaun
+            Tambah Rekening
           </button>
         </div>
       </div>
@@ -210,19 +210,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     id={`acc-edit-${acc.id}`}
                     onClick={() => handleOpenEdit(acc)}
                     className="p-1.5 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                    title="Edit Akaun"
+                    title="Ubah Rekening"
                   >
                     <Edit2 size={14} />
                   </button>
                   <button
                     id={`acc-delete-${acc.id}`}
                     onClick={() => {
-                      if (confirm(`Adakah anda pasti mahu memadam akaun "${acc.name}"?`)) {
+                      if (confirm(`Apakah Anda yakin ingin menghapus rekening "${acc.name}"?`)) {
                         onDeleteAccount(acc.id);
                       }
                     }}
                     className="p-1.5 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
-                    title="Padam Akaun"
+                    title="Hapus Rekening"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -242,7 +242,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-bold uppercase block tracking-wider">
-                  Baki Semasa
+                  Saldo Saat Ini
                 </span>
                 <span className="text-xl font-black text-zinc-950 dark:text-zinc-100 block mt-0.5">
                   {formatRupiah(acc.balance)}
@@ -258,12 +258,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
             <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mb-4">
-              Tambah Akaun Keuangan Baru
+              Tambah Rekening Keuangan Baru
             </h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Nama Akaun
+                  Nama Rekening
                 </label>
                 <input
                   type="text"
@@ -278,7 +278,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                    Jenis Akaun
+                    Jenis Rekening
                   </label>
                   <select
                     value={type}
@@ -288,12 +288,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <option value="Bank">Bank</option>
                     <option value="E-Wallet">E-Wallet</option>
                     <option value="Cash">Cash (Tunai)</option>
-                    <option value="Investment">Pelaburan</option>
+                    <option value="Investment">Investasi</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                    Baki Permulaan (Rp)
+                    Saldo Awal (Rp)
                   </label>
                   <input
                     type="number"
@@ -307,7 +307,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Tema Warna Kad
+                  Tema Warna Kartu
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {colors.map((c) => (
@@ -336,7 +336,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   type="submit"
                   className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all"
                 >
-                  Simpan Akaun
+                  Simpan Rekening
                 </button>
               </div>
             </form>
@@ -349,12 +349,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
             <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mb-4">
-              Kemaskini Akaun Keuangan
+              Perbarui Rekening Keuangan
             </h3>
             <form onSubmit={handleUpdate} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Nama Akaun
+                  Nama Rekening
                 </label>
                 <input
                   type="text"
@@ -368,7 +368,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                    Jenis Akaun
+                    Jenis Rekening
                   </label>
                   <select
                     value={type}
@@ -378,12 +378,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <option value="Bank">Bank</option>
                     <option value="E-Wallet">E-Wallet</option>
                     <option value="Cash">Cash (Tunai)</option>
-                    <option value="Investment">Pelaburan</option>
+                    <option value="Investment">Investasi</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                    Baki Akaun (Rp)
+                    Saldo Rekening (Rp)
                   </label>
                   <input
                     type="number"
@@ -396,7 +396,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Tema Warna Kad
+                  Tema Warna Kartu
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {colors.map((c) => (
@@ -425,7 +425,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   type="submit"
                   className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all"
                 >
-                  Kemaskini
+                  Perbarui
                 </button>
               </div>
             </form>
@@ -439,12 +439,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
             <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mb-4 flex items-center gap-2">
               <ArrowRightLeft size={20} className="text-emerald-600" />
-              Pindahan Baki Antara Akaun
+              Transfer Saldo Antar Rekening
             </h3>
             <form onSubmit={handleTransferSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Daripada Akaun (Sumber)
+                  Dari Rekening (Sumber)
                 </label>
                 <select
                   value={fromAccountId}
@@ -461,7 +461,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Kepada Akaun (Destinasi)
+                  Ke Rekening (Tujuan)
                 </label>
                 <select
                   value={toAccountId}
@@ -478,13 +478,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Jumlah Pindahan (Rp)
+                  Jumlah Transfer (Rp)
                 </label>
                 <input
                   type="number"
                   required
                   min="1"
-                  placeholder="Masukkan jumlah wang"
+                  placeholder="Masukkan nominal uang"
                   value={transferAmount}
                   onChange={(e) => setTransferAmount(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
@@ -493,7 +493,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Keterangan Pindahan
+                  Keterangan Transfer
                 </label>
                 <input
                   type="text"
@@ -517,7 +517,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   type="submit"
                   className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all"
                 >
-                  Lakukan Pindahan
+                  Lakukan Transfer
                 </button>
               </div>
             </form>

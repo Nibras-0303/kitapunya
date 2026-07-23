@@ -18,19 +18,19 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
 
   const handleInitializeDatabase = async () => {
     setIsInitializingDb(true);
-    setDbInitLog("Memulakan sambungan...\n");
+    setDbInitLog("Memulai koneksi...\n");
     setShowDbConsole(true);
     try {
       const res = await api.initializeDatabaseSchema();
       setDbInitLog(res.log);
       if (res.success) {
-        showToast("Database Supabase berjaya dimigrasi & disemai!", "success");
+        showToast("Basis data Supabase berhasil dimigrasi & di-seed!", "success");
       } else {
-        showToast("Ralat ketika migrasi pangkalan data.", "error");
+        showToast("Error saat migrasi basis data.", "error");
       }
     } catch (err: any) {
-      setDbInitLog(prev => prev + `\nRALAT SISTEM: ${err.message || err}`);
-      showToast("Gagal berkomunikasi dengan pelayan.", "error");
+      setDbInitLog(prev => prev + `\nERROR SISTEM: ${err.message || err}`);
+      showToast("Gagal berkomunikasi dengan server.", "error");
     } finally {
       setIsInitializingDb(false);
     }
@@ -48,7 +48,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
     setUsers(prev => prev.map(u => {
       if (u.id === userId) {
         const nextRole = u.role === "admin" ? "user" : "admin";
-        showToast(`Peranan ${u.name} ditukar kepada ${nextRole}!`, "info");
+        showToast(`Peran ${u.name} diubah menjadi ${nextRole}!`, "info");
         return { ...u, role: nextRole };
       }
       return u;
@@ -57,15 +57,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
 
   const handleDeleteUser = (userId: string) => {
     const u = users.find(x => x.id === userId);
-    if (u && confirm(`Adakah anda pasti mahu memadam pengguna "${u.name}"?`)) {
+    if (u && confirm(`Apakah Anda yakin ingin menghapus pengguna "${u.name}"?`)) {
       setUsers(prev => prev.filter(x => x.id !== userId));
-      showToast(`Pengguna ${u.name} telah dikeluarkan daripada sistem.`, "success");
+      showToast(`Pengguna ${u.name} telah dikeluarkan dari sistem.`, "success");
     }
   };
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    showToast("Konfigurasi QRIS & Tetapan Merchant berjaya disimpan!", "success");
+    showToast("Konfigurasi QRIS & Pengaturan Merchant berhasil disimpan!", "success");
   };
 
   return (
@@ -76,7 +76,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
           Admin Control & System Panel
         </h2>
         <p className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold mt-1">
-          Pantau status pangkalan data, aktiviti logs, dan lakukan konfigurasi QRIS serta kebenaran ahli sistem.
+          Pantau status basis data, log aktivitas, lakukan konfigurasi QRIS, serta atur izin anggota sistem.
         </p>
       </div>
 
@@ -87,8 +87,8 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
             <Server size={22} />
           </div>
           <div>
-            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Status Pelayan</span>
-            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">AKTIF (Cemerlang)</span>
+            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Status Server</span>
+            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">AKTIF (Lancar)</span>
           </div>
         </div>
 
@@ -118,7 +118,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
         <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-3xl shadow-sm space-y-4">
           <h3 className="font-extrabold text-base text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
             <Users size={18} className="text-emerald-600" />
-            Senarai Pengguna Berdaftar
+            Daftar Pengguna Terdaftar
           </h3>
 
           <div className="overflow-x-auto">
@@ -126,9 +126,9 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
               <thead>
                 <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
                   <th className="pb-3 pl-2">Nama & Emel</th>
-                  <th className="pb-3">Peranan</th>
+                  <th className="pb-3">Peran</th>
                   <th className="pb-3">Status</th>
-                  <th className="pb-3 text-center pr-2">Tindakan</th>
+                  <th className="pb-3 text-center pr-2">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
@@ -151,14 +151,14 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
                         <button
                           onClick={() => handleToggleRole(u.id)}
                           className="px-2.5 py-1 text-[10px] font-bold border border-zinc-200 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-all"
-                          title="Tukar Peranan"
+                          title="Ubah Peran"
                         >
-                          Tukar Role
+                          Ubah Peran
                         </button>
                         <button
                           onClick={() => handleDeleteUser(u.id)}
                           className="p-1.5 text-zinc-400 hover:text-red-600 rounded"
-                          title="Keluarkan Ahli"
+                          title="Hapus Pengguna"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -210,13 +210,13 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
                 className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm"
               >
                 <Save size={14} />
-                Simpan Tetapan QRIS
+                Simpan Pengaturan QRIS
               </button>
             </form>
 
             {/* QR Code preview */}
             <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex flex-col items-center">
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block mb-3">Sila Uji Kod QRIS Anda</span>
+              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block mb-3">Silakan Uji Kode QRIS Anda</span>
               <div className="p-3 bg-white border border-zinc-200 rounded-2xl w-40 h-40">
                 <img src={qrisUrl} alt="QRIS QR Preview" className="w-full h-full object-contain" />
               </div>
@@ -228,10 +228,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-3xl shadow-sm space-y-4">
             <h3 className="font-extrabold text-base text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
               <Database size={18} className="text-violet-600" />
-              Penyelarasan & Migrasi Supabase
+              Sinkronisasi & Migrasi Supabase
             </h3>
             <p className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold leading-relaxed">
-              Bina jadual skema Drizzle secara automatik dan masukkan (seed) rekod profil asas kami ke dalam projek pangkalan data Supabase anda.
+              Buat tabel skema Drizzle secara otomatis dan masukkan (seed) catatan profil dasar ke dalam proyek basis data Supabase Anda.
             </p>
 
             <button
@@ -244,7 +244,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
               }`}
             >
               <Server size={14} className={isInitializingDb ? "animate-spin" : ""} />
-              {isInitializingDb ? "Sedang Membina..." : "Migrasi & Seed Supabase"}
+              {isInitializingDb ? "Sedang Membuat..." : "Migrasi & Seed Supabase"}
             </button>
 
             {showDbConsole && (
@@ -255,7 +255,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
                     onClick={() => setDbInitLog("")} 
                     className="text-[9px] font-bold text-zinc-400 hover:text-zinc-600"
                   >
-                    Kosongkan
+                    Bersihkan
                   </button>
                 </div>
                 <div className="bg-zinc-950 text-zinc-300 font-mono text-[10px] p-3 rounded-xl border border-zinc-800 max-h-40 overflow-y-auto whitespace-pre-wrap leading-relaxed">
@@ -289,7 +289,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ logs, showToast }) => {
             </div>
           ))}
           {logs.length === 0 && (
-            <div className="text-zinc-500 py-4 text-center">Tiada aktiviti dikesan lagi. Sila lakukan operasi sistem...</div>
+            <div className="text-zinc-500 py-4 text-center">Belum ada aktivitas terdeteksi. Silakan lakukan operasi sistem...</div>
           )}
         </div>
       </div>

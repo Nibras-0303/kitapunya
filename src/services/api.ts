@@ -203,6 +203,12 @@ export const api = {
     return res.report;
   },
 
+  async resetData(): Promise<{ success: boolean; message: string }> {
+    return await request<{ success: boolean; message: string }>("/reset-data", {
+      method: "POST",
+    });
+  },
+
   // --- BUDGETS ---
   async getBudgets(month?: string): Promise<Budget[]> {
     const query = month ? `?month=${month}` : "";

@@ -89,10 +89,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
-            Urus Kategori Transaksi
+            Kelola Kategori Transaksi
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold mt-1">
-            Cipta kategori belanjawan tersendiri untuk memetakan aliran keluar masuk kewangan secara sistematik.
+            Buat kategori anggaran sendiri untuk memetakan arus kas keluar dan masuk secara sistematis.
           </p>
         </div>
         <button
@@ -135,7 +135,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                   )}
                 </div>
                 <span className="text-xs text-zinc-400 dark:text-zinc-500 capitalize font-semibold block mt-0.5">
-                  Jenis: {cat.type === "expense" ? "Perbelanjaan" : "Pendapatan"}
+                  Jenis: {cat.type === "expense" ? "Pengeluaran" : "Pemasukan"}
                 </span>
               </div>
 
@@ -146,19 +146,19 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     id={`cat-edit-${cat.id}`}
                     onClick={() => handleOpenEdit(cat)}
                     className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-lg"
-                    title="Edit Kategori"
+                    title="Ubah Kategori"
                   >
                     <Edit2 size={12} />
                   </button>
                   <button
                     id={`cat-delete-${cat.id}`}
                     onClick={() => {
-                      if (confirm(`Adakah anda pasti mahu memadam kategori "${cat.name}"?`)) {
+                      if (confirm(`Apakah Anda yakin ingin menghapus kategori "${cat.name}"?`)) {
                         onDeleteCategory(cat.id);
                       }
                     }}
                     className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 text-zinc-500 hover:text-red-600 rounded-lg"
-                    title="Padam Kategori"
+                    title="Hapus Kategori"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -201,8 +201,8 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     onChange={(e) => setType(e.target.value as any)}
                     className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
                   >
-                    <option value="expense">Perbelanjaan (-)</option>
-                    <option value="income">Pendapatan (+)</option>
+                    <option value="expense">Pengeluaran (-)</option>
+                    <option value="income">Pemasukan (+)</option>
                   </select>
                 </div>
 
@@ -274,7 +274,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
             <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mb-4">
-              Kemaskini Kategori
+              Perbarui Kategori
             </h3>
             <form onSubmit={handleSubmitEdit} className="space-y-4">
               <div>
@@ -300,8 +300,8 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     onChange={(e) => setType(e.target.value as any)}
                     className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
                   >
-                    <option value="expense">Perbelanjaan (-)</option>
-                    <option value="income">Pendapatan (+)</option>
+                    <option value="expense">Pengeluaran (-)</option>
+                    <option value="income">Pemasukan (+)</option>
                   </select>
                 </div>
 
@@ -360,7 +360,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                   type="submit"
                   className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all"
                 >
-                  Kemaskini
+                  Perbarui
                 </button>
               </div>
             </form>

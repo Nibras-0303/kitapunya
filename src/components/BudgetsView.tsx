@@ -64,7 +64,7 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
     if (!selectedCategory) return;
     const amount = Number(budgetAmount);
     if (isNaN(amount) || amount < 0) {
-      alert("Sila masukkan jumlah bajet yang sah.");
+      alert("Silakan masukkan jumlah anggaran yang valid.");
       return;
     }
 
@@ -78,10 +78,10 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
-            Had & Belanjawan Bulanan
+            Batas & Anggaran Bulanan
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold mt-1">
-            Pantau baki had perbelanjaan bulanan mengikut kategori dan elakkan perbelanjaan berlebihan.
+            Pantau sisa batas pengeluaran bulanan sesuai kategori dan hindari pengeluaran berlebihan.
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-2 rounded-2xl shadow-sm">
@@ -111,10 +111,10 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
               {isOver ? <AlertOctagon className="flex-shrink-0 mt-0.5" size={20} /> : <AlertTriangle className="flex-shrink-0 mt-0.5" size={20} />}
               <div>
                 <h4 className="font-extrabold text-xs">
-                  {isOver ? "AMARAN: Bajet Melebihi Had!" : "PERINGATAN: Menghampiri Had Bajet"}
+                  {isOver ? "PERINGATAN: Anggaran Melebihi Batas!" : "PERINGATAN: Mendekati Batas Anggaran"}
                 </h4>
                 <p className="text-[11px] font-semibold mt-1 opacity-90 leading-relaxed">
-                  Perbelanjaan anda untuk kategori <span className="font-black">{r.category.name}</span> ialah <span className="font-black">{formatRupiah(r.actualSpent)}</span> daripada had yang ditetapkan iaitu <span className="font-black">{formatRupiah(r.budgetLimit)}</span> ({r.percentage.toFixed(0)}%). Sila jimatkan baki wang anda.
+                  Pengeluaran Anda untuk kategori <span className="font-black">{r.category.name}</span> adalah <span className="font-black">{formatRupiah(r.actualSpent)}</span> dari batas yang ditetapkan yaitu <span className="font-black">{formatRupiah(r.budgetLimit)}</span> ({r.percentage.toFixed(0)}%). Silakan hemat sisa uang Anda.
                 </p>
               </div>
             </div>
@@ -146,7 +146,7 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
                     id={`budget-edit-${report.category.id}`}
                     onClick={() => handleOpenEdit(report.category, report.budgetLimit)}
                     className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 rounded-lg"
-                    title="Ubah Had Bajet"
+                    title="Ubah Batas Anggaran"
                   >
                     <Edit2 size={13} />
                   </button>
@@ -163,10 +163,10 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
-                      Had Belanjawan
+                      Batas Anggaran
                     </span>
                     <span className="text-sm font-extrabold text-zinc-600 dark:text-zinc-400 block mt-0.5">
-                      {isConfigured ? formatRupiah(report.budgetLimit) : "Belum Set"}
+                      {isConfigured ? formatRupiah(report.budgetLimit) : "Belum Diatur"}
                     </span>
                   </div>
                 </div>
@@ -189,13 +189,13 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
 
                 <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                   <span className={isOver ? "text-red-600" : isWarning ? "text-amber-500" : "text-emerald-500"}>
-                    {isConfigured ? `${report.percentage.toFixed(0)}% Digunakan` : "Tiada Had Had"}
+                    {isConfigured ? `${report.percentage.toFixed(0)}% Digunakan` : "Tanpa Batas"}
                   </span>
                   <span className="text-zinc-400">
                     {isConfigured
                       ? report.actualSpent > report.budgetLimit
-                        ? `Lebihan ${formatRupiah(report.actualSpent - report.budgetLimit)}`
-                        : `Baki ${formatRupiah(report.budgetLimit - report.actualSpent)}`
+                        ? `Kelebihan ${formatRupiah(report.actualSpent - report.budgetLimit)}`
+                        : `Sisa ${formatRupiah(report.budgetLimit - report.actualSpent)}`
                       : "Bebas Belanja"}
                   </span>
                 </div>
@@ -210,7 +210,7 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
             <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mb-1">
-              Tetapkan Had Bajet Bulanan
+              Tetapkan Batas Anggaran Bulanan
             </h3>
             <p className="text-xs text-zinc-400 font-semibold mb-4">
               Kategori: <span className="font-bold" style={{ color: selectedCategory.color }}>{selectedCategory.name}</span>
@@ -218,13 +218,13 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Had Siling Belanjawan (Rp)
+                  Batas Maksimal Anggaran (Rp)
                 </label>
                 <input
                   type="number"
                   required
                   min="0"
-                  placeholder="Masukkan had siling"
+                  placeholder="Masukkan batas maksimal"
                   value={budgetAmount}
                   onChange={(e) => setBudgetAmount(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"

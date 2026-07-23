@@ -198,8 +198,8 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
   // Sell Investment Action (Refunding to account)
   const handleSellAsset = async (inv: Investment) => {
     const confirmation = window.confirm(
-      `Adakah anda pasti mahu menjual pelaburan "${inv.name}"?\n` +
-      `Tindakan ini akan mengemas kini status ke "Dijual" dan secara automatik memulangkan dana bernilai ${formatRupiah(inv.currentValue)} ke akaun sumber asal.`
+      `Apakah Anda yakin ingin menjual investasi "${inv.name}"?\n` +
+      `Tindakan ini akan memperbarui status ke "Dijual" dan secara otomatis mengembalikan dana bernilai ${formatRupiah(inv.currentValue)} ke rekening sumber asal.`
     );
     if (!confirmation) return;
 
@@ -289,7 +289,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
         return {
           name: inv.name.length > 15 ? inv.name.substring(0, 15) + "..." : inv.name,
           "Modal Awal": inv.initialCapital,
-          "Nilai Semasa": inv.currentValue,
+          "Nilai Saat Ini": inv.currentValue,
           "Untung/Rugi": gainLoss,
         };
       });
@@ -314,11 +314,11 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
               <Coins size={20} />
             </span>
             <h2 className="text-xl font-black text-zinc-900 dark:text-zinc-50 tracking-tight">
-              Pusat Pelaburan & Portofolio Pintar
+              Pusat Investasi & Portofolio Pintar
             </h2>
           </div>
           <p className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold mt-2 max-w-xl">
-            Urus pelaburan Emas, Saham, Reksadana, Obligasi, dan Simpanan secara berasingan bagi profil <span className="text-zinc-800 dark:text-zinc-200 font-bold">{session.fullName}</span>. Dana ditolak dan dikembalikan terus ke akaun pilihan anda.
+            Kelola investasi Emas, Saham, Reksadana, Obligasi, dan Simpanan secara terpisah untuk profil <span className="text-zinc-800 dark:text-zinc-200 font-bold">{session.fullName}</span>. Dana didebit dan dikembalikan langsung ke rekening pilihan Anda.
           </p>
         </div>
 
@@ -350,7 +350,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
           className="flex items-center gap-2 text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors disabled:opacity-50"
         >
           <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
-          {isRefreshing ? "Menilai Pasaran..." : "Kemaskini Harga (AI Gemini)"}
+          {isRefreshing ? "Menilai Pasar..." : "Perbarui Harga (AI Gemini)"}
         </button>
       </div>
 
@@ -375,14 +375,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
         {/* Current Portfolio Value */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-3xl shadow-sm space-y-1 relative overflow-hidden">
           <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-            Nilai Semasa Portfolio (Market)
+            Nilai Portofolio Saat Ini (Pasar)
           </span>
           <h3 className="text-xl font-black text-emerald-600 dark:text-emerald-400">
             {formatRupiah(totalCurrentValue)}
           </h3>
           <div className="text-[10px] text-zinc-400 font-semibold flex items-center gap-1">
             <CheckCircle size={10} className="text-emerald-500" />
-            Terakhir dikemas kini secara langsung
+            Terakhir diperbarui secara langsung
           </div>
           <div className="absolute right-4 bottom-4 text-emerald-100 dark:text-emerald-950 opacity-25">
             <Building size={40} />
@@ -415,7 +415,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
         {/* Quick summary status info */}
         <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white p-5 rounded-3xl shadow-sm space-y-2 relative">
           <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-            Ringkasan Transaksi Pelaburan
+            Ringkasan Transaksi Investasi
           </span>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
@@ -455,7 +455,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
           }`}
         >
           <List size={14} />
-          Senarai Jadual
+          Daftar Tabel
         </button>
         <button
           onClick={() => setActiveTab("charts")}
@@ -512,7 +512,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
           <Search size={14} className="absolute left-3.5 top-3 text-zinc-400" />
           <input
             type="text"
-            placeholder="Cari pelaburan..."
+            placeholder="Cari investasi..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-semibold outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-200"
@@ -527,10 +527,10 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-3xl shadow-sm space-y-4">
             <div>
               <h4 className="text-xs font-black text-zinc-700 dark:text-zinc-200 uppercase tracking-wider">
-                Komposisi Instrumen Pelaburan (Nilai Semasa)
+                Komposisi Instrumen Investasi (Nilai Saat Ini)
               </h4>
               <p className="text-[10px] text-zinc-400 font-semibold">
-                Peratusan pengagihan aset mengikut jenis pelaburan aktif
+                Persentase alokasi aset berdasarkan jenis investasi aktif
               </p>
             </div>
             <div className="h-64 relative flex items-center justify-center">
@@ -556,7 +556,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 </ResponsiveContainer>
               ) : (
                 <div className="text-center text-xs text-zinc-400 font-semibold">
-                  Tiada data pelaburan aktif untuk dipaparkan.
+                  Tidak ada data investasi aktif untuk ditampilkan.
                 </div>
               )}
             </div>
@@ -566,10 +566,10 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-3xl shadow-sm space-y-4">
             <div>
               <h4 className="text-xs font-black text-zinc-700 dark:text-zinc-200 uppercase tracking-wider">
-                Modal Asal vs Nilai Pasaran Semasa Aset
+                Modal Awal vs Nilai Pasar Saat Ini
               </h4>
               <p className="text-[10px] text-zinc-400 font-semibold">
-                Bandingkan kos pelaburan berbanding harga pasaran terkini
+                Bandingkan modal investasi dengan harga pasar terbaru
               </p>
             </div>
             <div className="h-64 flex items-center justify-center">
@@ -582,12 +582,12 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     <Tooltip formatter={(value) => formatRupiah(Number(value))} />
                     <Legend wrapperStyle={{ fontSize: 10, fontWeight: "bold" }} />
                     <Bar dataKey="Modal Awal" fill="#94A3B8" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Nilai Semasa" fill="#10B981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Nilai Saat Ini" fill="#10B981" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="text-center text-xs text-zinc-400 font-semibold">
-                  Tiada data pelaburan aktif untuk dipaparkan.
+                  Tidak ada data investasi aktif untuk ditampilkan.
                 </div>
               )}
             </div>
@@ -629,7 +629,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                           <button
                             onClick={() => handleOpenUpdatePrice(inv)}
                             className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-850 rounded text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-                            title="Kemaskini Harga Seunit"
+                            title="Perbarui Harga Per Unit"
                           >
                             <RefreshCw size={12} />
                           </button>
@@ -644,12 +644,12 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                       )}
                       <button
                         onClick={() => {
-                          if (confirm(`Adakah anda pasti mahu memadamkan pelaburan "${inv.name}"?`)) {
+                          if (confirm(`Apakah Anda yakin ingin menghapus investasi "${inv.name}"?`)) {
                             onDeleteInvestment(inv.id);
                           }
                         }}
                         className="p-1 hover:bg-red-50 dark:hover:bg-red-950/20 rounded text-zinc-400 hover:text-red-500"
-                        title="Padam Rekod"
+                        title="Hapus Catatan"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -695,7 +695,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
-                      {isSold ? "Nilai Penjualan" : "Nilai Semasa"}
+                      {isSold ? "Nilai Penjualan" : "Nilai Saat Ini"}
                     </span>
                     <span className={`font-black block mt-0.5 ${isSold ? "text-zinc-500" : "text-emerald-600 dark:text-emerald-400"}`}>
                       {formatRupiah(inv.currentValue)}
@@ -731,7 +731,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
         </div>
       )}
 
-      {/* TAB CONTENT: TABLE SENARAI VIEW */}
+      {/* TAB CONTENT: TABLE DAFTAR VIEW */}
       {activeTab === "table" && (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
@@ -740,11 +740,11 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 <tr className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 font-black uppercase text-[10px] tracking-wider">
                   <th className="p-4">Aset & Instrumen</th>
                   <th className="p-4">Jenis</th>
-                  <th className="p-4">Tarikh Beli</th>
-                  <th className="p-4 text-right">Modal Dilabur</th>
-                  <th className="p-4 text-right">Harga Semasa/Seunit</th>
-                  <th className="p-4 text-right">Nilai Semasa</th>
-                  <th className="p-4 text-right">Pulangan (ROI)</th>
+                  <th className="p-4">Tanggal Beli</th>
+                  <th className="p-4 text-right">Modal Diinvestasikan</th>
+                  <th className="p-4 text-right">Harga Saat Ini/Unit</th>
+                  <th className="p-4 text-right">Nilai Saat Ini</th>
+                  <th className="p-4 text-right">Imbal Hasil (ROI)</th>
                   <th className="p-4 text-center">Status</th>
                   <th className="p-4 text-center">Tindakan</th>
                 </tr>
@@ -814,14 +814,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                               <button
                                 onClick={() => handleOpenUpdatePrice(inv)}
                                 className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-lg"
-                                title="Kemaskini Harga"
+                                title="Perbarui Harga"
                               >
                                 <RefreshCw size={12} />
                               </button>
                               <button
                                 onClick={() => handleSellAsset(inv)}
                                 className="px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded-lg"
-                                title="Jual Pelaburan"
+                                title="Jual Investasi"
                               >
                                 Jual
                               </button>
@@ -829,12 +829,12 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                           )}
                           <button
                             onClick={() => {
-                              if (confirm(`Adakah anda pasti mahu memadamkan pelaburan "${inv.name}"?`)) {
+                              if (confirm(`Apakah Anda yakin ingin menghapus investasi "${inv.name}"?`)) {
                                 onDeleteInvestment(inv.id);
                               }
                             }}
                             className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 text-zinc-400 hover:text-red-600 rounded-lg"
-                            title="Padam"
+                            title="Hapus"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -854,10 +854,10 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-16 text-center flex flex-col items-center justify-center gap-4 shadow-sm">
           <AlertCircle size={48} className="text-zinc-300" />
           <h3 className="font-extrabold text-sm text-zinc-700 dark:text-zinc-300">
-            Tiada Data Pelaburan Dijumpai
+            Tidak Ada Data Investasi Ditemukan
           </h3>
           <p className="text-xs text-zinc-400 font-semibold max-w-sm">
-            Mula jejaki pelaburan anda dengan menekan butang "Beli / Tambah Aset" di atas untuk mempercepat kemajuan matlamat bersih anda!
+            Mulai lacak investasi Anda dengan menekan tombol "Beli / Tambah Aset" di atas untuk mempercepat pencapaian tujuan keuangan Anda!
           </p>
         </div>
       )}
@@ -871,11 +871,11 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 <Coins size={18} />
               </span>
               <h3 className="font-black text-lg text-zinc-900 dark:text-zinc-50">
-                Pendaftaran & Pembelian Pelaburan Baru
+                Pendaftaran & Pembelian Investasi Baru
               </h3>
             </div>
             <p className="text-xs text-zinc-400 mb-6 font-semibold">
-              Sila masukkan butiran lengkap instrumen pelaburan aktif anda. Dana pelaburan akan direkodkan dan ditolak secara automatik daripada baki akaun pilihan anda.
+              Silakan masukkan rincian lengkap instrumen investasi aktif Anda. Dana investasi akan dicatat dan dikurangi secara otomatis dari saldo rekening pilihan Anda.
             </p>
 
             <form onSubmit={handleSubmitAdd} className="space-y-4">
@@ -896,7 +896,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                    Jenis Pelaburan
+                    Jenis Investasi
                   </label>
                   <select
                     value={type}
@@ -961,14 +961,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                    Akaun Sumber Dana (Ref)
+                    Rekening Sumber Dana (Ref)
                   </label>
                   <select
                     value={sourceAccountId}
                     onChange={(e) => setSourceAccountId(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-xs focus:border-emerald-600 outline-none font-semibold"
                   >
-                    <option value="">-- Tiada Hubungan Akaun (Tanpa Potongan) --</option>
+                    <option value="">-- Tanpa Hubungan Rekening (Tanpa Potongan) --</option>
                     {profileAccounts.map((acc) => (
                       <option key={acc.id} value={acc.id}>
                         {acc.name} ({formatRupiah(acc.balance)})
@@ -976,7 +976,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     ))}
                   </select>
                   <span className="text-[9px] text-zinc-400 font-bold block mt-1">
-                    *Membeli aset akan secara automatik mengurangkan baki akaun di atas dengan merekodkan Transaksi Perbelanjaan (Kategori: Investasi & Tabungan).
+                    *Membeli aset akan secara otomatis mengurangi saldo rekening di atas dengan mencatat Transaksi Pengeluaran (Kategori: Investasi & Tabungan).
                   </span>
                 </div>
 
@@ -999,7 +999,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 p-3 rounded-xl text-[10px] text-amber-700 dark:text-amber-400 font-bold flex gap-2">
                   <AlertCircle size={14} className="shrink-0 mt-0.5" />
                   <span>
-                    PERINGATAN: Berdasarkan dasar bersama, akaun "Jajan Berdua" tidak disenaraikan dan dilarang untuk dijadikan dana pelaburan. Hanya akaun "Tabungan Bersama" dibenarkan.
+                    PERINGATAN: Berdasarkan kesepakatan bersama, rekening "Jajan Berdua" tidak dicantumkan dan dilarang untuk dijadikan dana investasi. Hanya rekening "Tabungan Bersama" yang diperbolehkan.
                   </span>
                 </div>
               )}
@@ -1016,7 +1016,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   type="submit"
                   className="px-5 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-sm"
                 >
-                  Sahkan & Tolak Baki Akaun
+                  Konfirmasi & Kurangi Saldo Rekening
                 </button>
               </div>
             </form>
@@ -1031,7 +1031,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
             <div className="flex items-center gap-1.5 mb-1">
               <RefreshCw size={18} className="text-emerald-600 animate-spin" />
               <h3 className="font-black text-sm text-zinc-900 dark:text-zinc-50">
-                Kemaskini Harga Seunit Terkini
+                Perbarui Harga Per Unit Terkini
               </h3>
             </div>
             <p className="text-xs text-zinc-400 mb-4 font-semibold">
@@ -1041,7 +1041,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
             <form onSubmit={handleSubmitUpdatePrice} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Harga Seunit Semasa Baru (Rp)
+                  Harga Per Unit Baru (Rp)
                 </label>
                 <input
                   type="number"
@@ -1060,7 +1060,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     <span className="font-bold text-zinc-800 dark:text-zinc-200">{selectedInv.shares} u</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Nilai Pelaburan Baharu:</span>
+                    <span>Nilai Investasi Baru:</span>
                     <span className="font-black text-emerald-600">
                       {formatRupiah((Number(newCurrentPrice) || 0) * selectedInv.shares)}
                     </span>
@@ -1080,7 +1080,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   type="submit"
                   className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-sm"
                 >
-                  Sahkan Kemaskini
+                  Konfirmasi Pembaruan
                 </button>
               </div>
             </form>

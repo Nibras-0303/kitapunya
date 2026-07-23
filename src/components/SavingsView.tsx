@@ -156,19 +156,19 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                           id={`savings-edit-${goal.id}`}
                           onClick={() => handleOpenEdit(goal)}
                           className="p-1.5 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
-                          title="Edit Sasaran"
+                          title="Ubah Target"
                         >
                           <Edit2 size={13} />
                         </button>
                         <button
                           id={`savings-delete-${goal.id}`}
                           onClick={() => {
-                            if (confirm(`Adakah anda pasti mahu memadam sasaran "${goal.name}"?`)) {
+                            if (confirm(`Apakah Anda yakin ingin menghapus target "${goal.name}"?`)) {
                               onDeleteGoal(goal.id);
                             }
                           }}
                           className="p-1.5 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors cursor-pointer"
-                          title="Padam Sasaran"
+                          title="Hapus Target"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -271,7 +271,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                    Baki Permulaan (Rp)
+                    Saldo Awal (Rp)
                   </label>
                   <input
                     type="number"
@@ -285,7 +285,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Tarikh Had Masa (Pilihan)
+                  Tenggat Waktu (Opsional)
                 </label>
                 <input
                   type="date"
@@ -320,7 +320,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
             <h3 className="font-extrabold text-lg text-zinc-900 dark:text-zinc-50 mb-4">
-              Kemaskini Sasaran Simpanan
+              Perbarui Sasaran Tabungan
             </h3>
             <form onSubmit={handleSubmitEdit} className="space-y-4">
               <div>
@@ -364,7 +364,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                  Tarikh Had Masa (Pilihan)
+                  Tenggat Waktu (Opsional)
                 </label>
                 <input
                   type="date"

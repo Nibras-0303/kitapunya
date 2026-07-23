@@ -118,6 +118,39 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [paidBy, setPaidBy] = useState("operasional");
   const [reimburse, setReimburse] = useState(false);
 
+  // Dynamically calculate valid destination accounts for transfer
+  const destinationAccounts = useMemo(() => {
+    if (txType !== "transfer") return [];
+    const isNibras = activeUserId === "11111111-1111-1111-1111-111111111111";
+    const isZenita = activeUserId === "22222222-2222-2222-2222-222222222222";
+    const isBersama = activeUserId === "33333333-3333-3333-3333-333333333333";
+
+    const list: { id: string; name: string }[] = [];
+
+    if (isNibras || isZenita) {
+      list.push({ id: "a0000000-0000-0000-0000-000000000301", name: "SeaBank Tabungan Bersama" });
+      list.push({ id: "a0000000-0000-0000-0000-000000000302", name: "SeaBank Operasional Bersama" });
+    } else if (isBersama) {
+      if (accountId !== "a0000000-0000-0000-0000-000000000301") {
+        list.push({ id: "a0000000-0000-0000-0000-000000000301", name: "SeaBank Tabungan Bersama" });
+      }
+      if (accountId !== "a0000000-0000-0000-0000-000000000302") {
+        list.push({ id: "a0000000-0000-0000-0000-000000000302", name: "SeaBank Operasional Bersama" });
+      }
+    }
+    return list;
+  }, [txType, activeUserId, accountId]);
+
+  // Maintain active destination selection
+  React.useEffect(() => {
+    if (txType === "transfer" && destinationAccounts.length > 0) {
+      const exists = destinationAccounts.some(d => d.id === toAccountId);
+      if (!exists) {
+        setToAccountId(destinationAccounts[0].id);
+      }
+    }
+  }, [txType, destinationAccounts, toAccountId]);
+
   // OCR Form / Loading states
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
@@ -206,12 +239,17 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     }
 
     if (txType === "transfer" && (!accountId || !toAccountId)) {
-      alert("Akaun sumber dan akaun destinasi diperlukan untuk pindahan baki.");
+      alert("Rekening sumber dan rekening tujuan diperlukan untuk transfer saldo.");
       return;
     }
 
     if (txType === "transfer" && accountId === toAccountId) {
-      alert("Akaun sumber dan destinasi tidak boleh sama.");
+      alert("Rekening sumber dan tujuan tidak boleh sama.");
+      return;
+    }
+
+    if (txType === "transfer" && accountId === toAccountId) {
+      alert("Rekening sumber dan tujuan tidak boleh sama.");
       return;
     }
 
@@ -221,7 +259,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       categoryId: txType !== "transfer" ? categoryId : null,
       amount: parsedAmount,
       type: txType,
-      description: description || (txType === "transfer" ? "Pindahan Wang" : "Transaksi baru"),
+      description: description || (txType === "transfer" ? "Transfer Dana" : "Transaksi baru"),
       date,
       receiptImageUrl: receiptUrl || null,
       transferToAccountId: (txType === "expense" && categoryId === "c0000000-0000-0000-0000-000000000007") ? transferToAccountId : null,
@@ -236,19 +274,19 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
-      showToast("Pemilihan fail dibatalkan atau tiada fail dipilih.", "info");
+      showToast("Pemilihan file dibatalkan atau tidak ada file dipilih.", "info");
       return;
     }
 
     // Validate size (Maksimal ukuran file 10 MB)
     if (file.size > 10 * 1024 * 1024) {
-      showToast("Ralat: Ukuran fail melebihi had maksimum 10MB.", "error");
+      showToast("Kesalahan: Ukuran file melebihi batas maksimal 10MB.", "error");
       return;
     }
 
     // Validate type (Tolak file selain gambar)
     if (!file.type.startsWith("image/")) {
-      showToast("Ralat: Fail yang dipilih bukan gambar. Sila pilih gambar JPG, JPEG, PNG, atau WEBP sahaja.", "error");
+      showToast("Kesalahan: File yang dipilih bukan gambar. Silakan pilih gambar JPG, JPEG, PNG, atau WEBP saja.", "error");
       return;
     }
 
@@ -257,12 +295,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     reader.onloadend = () => {
       const base64Data = reader.result as string;
       setOcrSelectedImage(base64Data);
-      showToast("Fail berjaya dimuat naik! Mengimbas secara automatik...", "success");
+      showToast("File berhasil diunggah! Memindai secara otomatis...", "success");
       // Auto-trigger scan
       handleOcrScan(file, base64Data);
     };
     reader.onerror = () => {
-      showToast("Gagal membaca fail gambar.", "error");
+      showToast("Gagal membaca file gambar.", "error");
     };
     reader.readAsDataURL(file);
     // Reset file input target value so onChange triggers every time even if selecting same file
@@ -325,7 +363,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             setSelectedFile(blob);
             stopCamera();
             setCameraActive(false);
-            showToast("Gambar berjaya ditangkap! Mengimbas secara automatik...", "success");
+            showToast("Gambar berhasil diambil! Memindai secara otomatis...", "success");
             handleOcrScan(blob, dataUrl);
           }
         }, "image/jpeg");
@@ -351,7 +389,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   // Run AI Scan via Gemini API with option to receive immediate inputs
   const handleOcrScan = async (customFile?: File | Blob, customBase64?: string) => {
     setIsOcrLoading(true);
-    setOcrStatus("Menyambung ke Google Gemini API...");
+    setOcrStatus("Menghubungkan ke Google Gemini API...");
 
     try {
       let finalBase64 = "";
@@ -362,12 +400,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       const activeFile = customFile || selectedFile;
 
       if (!activeBase64) {
-        showToast("Sila pilih gambar resit atau gunakan kamera peranti.", "error");
+        showToast("Silakan pilih gambar struk atau gunakan kamera perangkat.", "error");
         setIsOcrLoading(false);
         return;
       }
 
-      setOcrStatus("Memuat naik gambar ke Supabase Storage...");
+      setOcrStatus("Mengunggah gambar ke Supabase Storage...");
       try {
         let fileToUpload = activeFile;
         if (!fileToUpload) {
@@ -383,18 +421,18 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         }
 
         publicImageUrl = await uploadReceiptImage(fileToUpload);
-        showToast("Imej berjaya disimpan ke Supabase Storage!", "success");
+        showToast("Gambar berhasil disimpan ke Supabase Storage!", "success");
       } catch (uploadErr: any) {
         console.error("Supabase Storage Upload Error:", uploadErr);
-        showToast(`Gagal muat naik ke Supabase Storage: ${uploadErr.message || uploadErr}`, "error");
+        showToast(`Gagal mengunggah ke Supabase Storage: ${uploadErr.message || uploadErr}`, "error");
       }
 
       // Extract base64 payload from data url
       finalBase64 = activeBase64.split(",")[1] || activeBase64;
 
       // Small status simulation to make it look spectacular
-      setTimeout(() => setOcrStatus("Tahap 1: Membaca teks gambar penuh (OCR)..."), 1000);
-      setTimeout(() => setOcrStatus("Tahap 2: AI melakukan parsing kedai, tanggal & barang..."), 2200);
+      setTimeout(() => setOcrStatus("Tahap 1: Membaca teks gambar lengkap (OCR)..."), 1000);
+      setTimeout(() => setOcrStatus("Tahap 2: AI mem-parsing toko, tanggal & barang..."), 2200);
       setTimeout(() => setOcrStatus("Tahap 3: Memvalidasi nominal transaksi & menghitung akurasi..."), 3400);
 
       let result;
@@ -445,18 +483,18 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         date: result.date || new Date().toISOString().substring(0, 10),
         time: result.time || "",
         categoryId: finalCategoryId,
-        description: `Imbasan nota dari ${result.merchant || "Merchant"}`,
+        description: `Pemindaian nota dari ${result.merchant || "Merchant"}`,
         receiptImageUrl: activeImg,
         confidence: result.confidence !== undefined ? result.confidence : 100,
         items: result.items || [],
         accountId: defaultAccountId,
       });
 
-      showToast("Analisis Pintar AI Selesai! Sila semak semula butiran perbelanjaan.", "success");
+      showToast("Analisis Pintar AI Selesai! Silakan periksa kembali rincian pengeluaran.", "success");
       handleCloseOcrModal();
       setIsOcrConfirmModalOpen(true); // Open the Confirmation/Review Modal!
     } catch (err: any) {
-      showToast("Ralat mengimbas resit: " + err.message, "error");
+      showToast("Kesalahan memindai struk: " + err.message, "error");
     } finally {
       setIsOcrLoading(false);
     }
@@ -483,13 +521,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
     const parsedAmount = Number(tempOcrResult.amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert("Masukkan nilai jumlah transaksi yang sah.");
+      alert("Masukkan nilai jumlah transaksi yang valid.");
       return;
     }
 
     const finalAccId = tempOcrResult.accountId || (localAccounts[0]?.id || "");
     if (!finalAccId) {
-      alert("Sila pilih akaun sumber.");
+      alert("Silakan pilih rekening sumber.");
       return;
     }
 
@@ -499,7 +537,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       categoryId: tempOcrResult.categoryId,
       amount: parsedAmount,
       type: "expense",
-      description: tempOcrResult.description || `Imbasan nota dari ${tempOcrResult.merchant}`,
+      description: tempOcrResult.description || `Pemindaian nota dari ${tempOcrResult.merchant}`,
       date: tempOcrResult.date,
       receiptImageUrl: tempOcrResult.receiptImageUrl || null,
       transferToAccountId: null,
@@ -507,7 +545,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
     setIsOcrConfirmModalOpen(false);
     setTempOcrResult(null);
-    showToast("Transaksi berjaya disimpan!", "success");
+    showToast("Transaksi berhasil disimpan!", "success");
   };
 
   return (
@@ -576,8 +614,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             >
               <option value="all">Semua Aliran (Masuk/Keluar)</option>
               <option value="income">Pendapatan (+)</option>
-              <option value="expense">Perbelanjaan (-)</option>
-              <option value="transfer">Pindahan Baki (⇌)</option>
+              <option value="expense">Pengeluaran (-)</option>
+              <option value="transfer">Transfer Saldo (⇌)</option>
             </select>
           </div>
 
@@ -588,7 +626,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               onChange={(e) => setFilterAccount(e.target.value)}
               className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs font-semibold outline-none text-zinc-900 dark:text-zinc-100"
             >
-              <option value="all">Semua Akaun Keuangan</option>
+              <option value="all">Semua Rekening Keuangan</option>
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>{a.name}</option>
               ))}
@@ -655,12 +693,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                  <th className="pb-3 pl-2">Tarikh & Keterangan</th>
+                  <th className="pb-3 pl-2">Tanggal & Keterangan</th>
                   <th className="pb-3">Kategori</th>
                   <th className="pb-3">Jenis Aliran</th>
-                  <th className="pb-3">Akaun Terlibat</th>
+                  <th className="pb-3">Rekening Terlibat</th>
                   <th className="pb-3 text-right">Jumlah</th>
-                  <th className="pb-3 text-center pr-2">Tindakan</th>
+                  <th className="pb-3 text-center pr-2">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
@@ -699,7 +737,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                             <span className="text-zinc-700 dark:text-zinc-300">{cat.name}</span>
                           </div>
                         ) : (
-                          <span className="text-zinc-400 font-medium">Pindahan Baki</span>
+                          <span className="text-zinc-400 font-medium">Transfer Saldo</span>
                         )}
                       </td>
                       <td className="py-3.5">
@@ -711,12 +749,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         ) : isExpense ? (
                           <span className="inline-flex items-center gap-1 text-xs text-red-600 bg-red-50 dark:bg-red-950/20 px-2.5 py-1 rounded-full">
                             <ArrowUpRight size={12} />
-                            Perbelanjaan
+                            Pengeluaran
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-xs text-violet-600 bg-violet-50 dark:bg-violet-950/20 px-2.5 py-1 rounded-full">
                             <ArrowRight size={12} />
-                            Pindahan
+                            Transfer
                           </span>
                         )}
                       </td>
@@ -729,7 +767,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                           </div>
                         ) : (
                           <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                            {acc?.name || "Akaun Luar"}
+                            {acc?.name || "Rekening Luar"}
                           </span>
                         )}
                       </td>
@@ -746,12 +784,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                           <button
                             id={`tx-delete-${tx.id}`}
                             onClick={() => {
-                              if (confirm("Adakah anda pasti mahu memadam transaksi ini? Tindakan ini akan mengimbas semula baki akaun anda.")) {
+                              if (confirm("Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini akan menghitung ulang saldo rekening Anda.")) {
                                 onDeleteTransaction(tx.id);
                               }
                             }}
                             className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all cursor-pointer"
-                            title="Padam Transaksi"
+                            title="Hapus Transaksi"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -786,21 +824,21 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 onClick={() => { setTxType("expense"); }}
                 className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${txType === "expense" ? "bg-red-600 text-white" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900"}`}
               >
-                Belanja (-)
+                Pengeluaran (-)
               </button>
               <button
                 type="button"
                 onClick={() => { setTxType("income"); }}
                 className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${txType === "income" ? "bg-emerald-600 text-white" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900"}`}
               >
-                Masuk (+)
+                Pemasukan (+)
               </button>
               <button
                 type="button"
                 onClick={() => { setTxType("transfer"); }}
                 className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${txType === "transfer" ? "bg-violet-600 text-white" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900"}`}
               >
-                Pindah (⇌)
+                Transfer (⇌)
               </button>
             </div>
 
@@ -846,7 +884,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 {txType === "transfer" ? (
                   <div>
                     <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1.5">
-                      Akaun Destinasi
+                      Rekening Penerima (Tujuan)
                     </label>
                     {loadingAccounts ? (
                       <div className="text-xs font-semibold text-zinc-500 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl px-4 border border-zinc-200 dark:border-zinc-800 animate-pulse flex items-center gap-2">
@@ -872,8 +910,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         onChange={(e) => setToAccountId(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-900 dark:text-zinc-50 text-sm focus:border-emerald-600 outline-none font-semibold"
                       >
-                        {localAccounts.map((a) => (
-                          <option key={a.id} value={a.id}>{a.name} ({formatRupiah(a.balance)})</option>
+                        {destinationAccounts.map((a) => (
+                          <option key={a.id} value={a.id}>{a.name}</option>
                         ))}
                       </select>
                     )}
@@ -1032,7 +1070,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     </div>
                   )}
                   <p className="text-[10px] text-emerald-700/80 dark:text-emerald-400 font-semibold leading-relaxed">
-                    * Memilih talangan peribadi dan pengembalian akan mengurangkan baki Operasional Bersama dan menambah baki saku peribadi pembayar secara automatik.
+                    * Memilih dana talangan pribadi dan pengembalian akan mengurangi saldo Operasional Bersama dan menambah saldo dompet pribadi pembayar secara otomatis.
                   </p>
                 </div>
               )}
@@ -1224,7 +1262,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       📷 Ambil Foto (Kamera)
                     </span>
                     <span className="text-[10px] text-zinc-500 mt-1 max-w-[150px]">
-                      Ambil foto resit terus menggunakan kamera sistem peranti anda (Disyorkan)
+                      Ambil foto struk langsung menggunakan kamera sistem perangkat Anda (Direkomendasikan)
                     </span>
                   </label>
 
@@ -1240,7 +1278,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       🖼️ Pilih dari Galeri
                     </span>
                     <span className="text-[10px] text-zinc-500 mt-1 max-w-[150px]">
-                      Pilih fail imej resit sedia ada dari galeri atau peranti anda
+                      Pilih file gambar struk yang ada dari galeri atau perangkat Anda
                     </span>
                   </label>
 
@@ -1260,7 +1298,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       📹 Kamera Web Langsung
                     </span>
                     <span className="text-[10px] text-zinc-500 mt-1 max-w-[150px]">
-                      Gunakan suapan video kamera langsung di dalam pelayar web anda
+                      Gunakan video kamera langsung di dalam browser web Anda
                     </span>
                   </button>
                 </div>
@@ -1285,10 +1323,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         <div className="fixed inset-0 bg-black/65 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-zinc-950 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-in fade-in-50 zoom-in-95 duration-200">
             <h3 className="text-lg font-extrabold text-zinc-900 dark:text-zinc-50 mb-2">
-              Pilih Akaun untuk Transaksi Imbasan AI
+              Pilih Rekening untuk Transaksi Pemindaian AI
             </h3>
             <p className="text-xs text-zinc-500 mb-6 font-semibold">
-              Sila pilih akaun di mana transaksi bernilai <span className="text-violet-600 dark:text-violet-400 font-bold">{formatRupiah(Number(tempOcrResult.amount))}</span> ini akan direkodkan.
+              Silakan pilih rekening tempat transaksi bernilai <span className="text-violet-600 dark:text-violet-400 font-bold">{formatRupiah(Number(tempOcrResult.amount))}</span> ini akan dicatat.
             </p>
 
             <div className="space-y-3 mb-6">
